@@ -265,8 +265,8 @@ header {
     text-align: center;
     color: #fff;
     background-attachment: scroll;
-    /*頁首圖片*/
-    background-image: url(教會門口.jpg);
+/*頁首圖片*/
+    background-image: url();
     background-position: center center;
     background-repeat: none;
     -webkit-background-size: cover;
