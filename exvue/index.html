@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen -  Demo 10-4 [前端框架Vue.js] v-model 使用者輸入雙向綁定</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div id="app">
+  <h1>Vue.js 使用者互動</h1>
+  <h3>使用v-model="變數名稱" 即時的偵測輸入改變</h3>
+  <hr/>
+  <label>姓名:</label>
+  <input v-model="name"/><br/>
+  <label>訊息:</label>
+  <input v-model="message"/><br/>
+  <label>顏色:</label>
+  <input v-model="color"/><br/>
+  <label>Class:</label>
+  <input v-model="class"/><br/>
+  <div v-for="(id,book) in books">
+    <label>book {{id+1}}:</label>
+    <input v-model="book"/>
+  </div>
+  <div class="borderbox">
+    <h4>哈囉，{{name}}</h4>
+    <h5>你輸入了「{{message}}」</h5>
+    <h5>下面這個方塊顏色是: {{color}}</h5>
+    <div class="block {{class}}" style="background-color: {{color}}"></div>
+    <ul>
+      <li v-for="book in books">{{book}}</li>
+    </ul>
+  </div>
+</div>
+<!-- partial -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
