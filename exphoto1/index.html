@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Photo album collection with filters</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css'><link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="col-12">
+                        <ul class="nav navbar navbar-light filters text-center">
+                            <li class="active" data-filter="*"><a href="#!">All</a></li>
+                            <li data-filter=".graphic"><a href="#!">Graphic Design</a></li>
+                            <li data-filter=".uiUx"><a href="#!">UI/UX</a></li>
+                            <li data-filter=".exhibition"><a href="#!">Exhibition</a></li>
+                            <li data-filter=".archi"><a href="#!">Architecture</a></li>
+                        </ul> 
+
+                        <div class="projects">
+                            <div class="row col-12">
+                                        <div class="card col-12  col-md-4 item graphic">
+                                            <img class="card-img-top work-img" src="https://gratisography.com/wp-content/uploads/2019/12/gratisography-concrete-architecture-2-900x600.jpg" data-toggle="modal" data-target="#workModal1"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album1</h2>
+                                            </div>
+                                        </div>
+
+                                        <div class="card col-12  col-md-4 item uiUx">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/wp-content/uploads/2019/12/gratisography-mountains-scenic-horizon-900x547.jpg" data-toggle="modal" data-target="#workModal2"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album2</h2>
+                                            </div>
+                                        </div>
+
+                                        <div class="card col-12  col-md-4 item exhibition">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/wp-content/uploads/2019/11/gratisography-city-glass-buildings-900x600.jpg" data-toggle="modal" data-target="#workModal3"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album3</h2>
+                                            </div>
+                                        </div>
+
+                                        <div class="card col-12  col-md-4 item exhibition">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/wp-content/uploads/2019/11/gratisography-urban-construction-staging-900x600.jpg" data-toggle="modal" data-target="#workModal4"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album4</h2>
+                                            </div>   
+                                        </div>
+
+                                        <div class="card col-12  col-md-4 item exhibition">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/thumbnails/gratisography-brick-vine-thumbnail.jpg" data-toggle="modal" data-target="#workModal5"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album5</h2>
+                                            </div>     
+                                        </div> 
+
+                                        <div class="card col-12  col-md-4 item exhibition">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/thumbnails/gratisography-64-thumbnail.jpg" data-toggle="modal" data-target="#workModal6"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album6</h2>
+                                            </div>   
+                                        </div>
+
+                                        <div class="card col-12  col-md-4 item exhibition">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/thumbnails/gratisography-352-thumbnail.jpg" data-toggle="modal" data-target="#workModal7"/>
+                                            <div class="card-body">
+                                                <h2 class="card-text">Album7</h2>
+                                            </div>
+                                        </div>
+
+                                        <div class="card col-12  col-md-4 item exhibition">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/thumbnails/gratisography-315-thumbnail.jpg" data-toggle="modal" data-target="#workModal8"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album8</h2>
+                                            </div>
+                                        </div>
+                                        <div class="card col-12  col-md-4 item archi">
+                                            <img class="card-img-top  work-img" src="https://gratisography.com/thumbnails/gratisography-61-thumbnail.jpg" data-toggle="modal" data-target="#workModal9"/>
+                                            <div class="card-body">
+                                            <h2 class="card-text">Album9</h2>
+                                            </div>  
+                                        </div>
+
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+
+
+
+    <!-- modal1 -->
+    <div class="modal fade" id="workModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/wp-content/uploads/2019/12/gratisography-concrete-architecture-2-900x600.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-2-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-245-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-36-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal1 end -->
+
+<!-- modal2 -->
+    <div class="modal fade" id="workModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/wp-content/uploads/2019/12/gratisography-mountains-scenic-horizon-900x547.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-desert-landscape-sky-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-field-blue-sky-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-butterfly-flower-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal2 end -->
+
+<!-- modal3 -->
+    <div class="modal fade" id="workModal3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/wp-content/uploads/2019/11/gratisography-city-glass-buildings-900x600.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-architecture-lines-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-black-white-escalators-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-black-white-city-street-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal3 end -->
+
+    <!-- modal4 -->
+    <div class="modal fade" id="workModal4" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/wp-content/uploads/2019/11/gratisography-urban-construction-staging-900x600.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-328-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-305-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-286-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal4 end -->
+
+<!-- modal5 -->
+    <div class="modal fade" id="workModal5" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-brick-vine-thumbnail.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-291-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-197-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-219-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal5 end -->
+
+<!-- modal6 -->
+    <div class="modal fade" id="workModal6" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-64-thumbnail.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-135-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-148-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-84-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal6 end -->
+
+    <!-- modal7 -->
+    <div class="modal fade" id="workModal7" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-352-thumbnail.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-92-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-85-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-88-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal7 end -->
+
+<!-- modal8 -->
+    <div class="modal fade" id="workModal8" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-315-thumbnail.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-59-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-57-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-19-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal8 end -->
+
+<!-- modal9 -->
+    <div class="modal fade" id="workModal9" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  
+                        <div class="upper">
+                                <div class="text">
+                                        <h2>title1</h2>
+                                        <h3>sub title1</h3>
+                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatum necessitatibus enim nam in ex voluptate voluptates veniam iusto alias aspernatur?</p>
+                                        </div>
+                                
+                                <div class="product-image">
+                                    <img class="active1">
+                                </div>
+                            </div>
+                            <div class="sideImg">
+                                <ul class="image-list">
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-61-thumbnail.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-colorful-wall-geometry-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-9-thumbnail-small.jpg"  >
+                                    </li>
+                                    <li class="image-item">
+                                        <img src="https://gratisography.com/thumbnails/gratisography-5-thumbnail-small.jpg"  >
+                                    </li>
+                                </ul>
+                            </div>
+                
+                        </div>
+                <div class="modal-footer">
+                </div>
+
+                </div>
+              </div>
+            </div>
+    <!-- modal9 end -->
+<!-- partial -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
