@@ -87,88 +87,6 @@
     </header>
 
     <!-- 服務項目 -->
-    <!-- 時鐘 -->
-    <div class="current-time" id="current-time">現在時間為: Loading current time...</div> <!-- 修改此行 -->
-    <div class="countdown" id="countdown"></div>
-    <div class="festival" id="festival"></div>
-    <div id="flipdown" class="flipdown"></div>
-
-    <script>
-        // Check if the current date is after the specified date
-        function isAfterSpecifiedDate() {
-            const now = new Date();
-            const specifiedDate = new Date('2024-02-09T00:00:00+08:00');
-            return now >= specifiedDate;
-        }
-
-        // Initialize FlipDown only if the current date is before the specified date
-        if (!isAfterSpecifiedDate()) {
-            var flipdown = new FlipDown(new Date('2024-02-09T00:00:00+08:00').getTime() / 1000, {
-                theme: 'dark',
-                headings: ['Days', 'Hours', 'Minutes', 'Seconds']
-            }).start();
-        }
-
-        function formatTimeUnit(unit) {
-            return unit < 10 ? '0' + unit : unit;
-        }
-
-        function getFestival(date) {
-            const festivals = {
-                '2-9': '除夕',
-                '2-10': '春節',
-                '2-11': '初二',
-                '2-12': '初三',
-                '2-13': '初四',
-                '2-14': '初五',
-                '2-15': '初六',
-                '2-16': '初七',
-                '2-17': '初八',
-                '2-18': '初九',
-            };
-            return festivals[`${date.getMonth() + 1}-${date.getDate()}`];
-        }
-
-        function updateDateTime() {
-            const now = new Date();
-            const formattedTime = now.getFullYear() + '/' + 
-                                  (now.getMonth() + 1) + '/' + 
-                                  now.getDate() + ' ' + 
-                                  formatTimeUnit(now.getHours()) + ':' + 
-                                  formatTimeUnit(now.getMinutes()) + ':' + 
-                                  formatTimeUnit(now.getSeconds());
-
-            document.getElementById('current-time').innerText = '現在時間為\n' + formattedTime; // 修改此行
-
-            // Display countdown text until FlipDown starts
-            const endOfCountdown = new Date('2024-02-09T00:00:00');
-            if (now < endOfCountdown) {
-                document.getElementById('countdown').innerText = '距離2024年除夕還有';
-            } else {
-                document.getElementById('countdown').style.display = 'none';
-            }
-
-            const festival = getFestival(now);
-            const endOfFestival = new Date('2024-02-18T23:59:59');
-            if (festival && now <= endOfFestival) {
-                document.getElementById('festival').innerText = festival;
-            } else {
-                document.getElementById('festival').innerText = '';
-            }
-
-            if (isAfterSpecifiedDate()) {
-                // Remove the FlipDown element
-                var flipdownElement = document.getElementById('flipdown');
-                flipdownElement.parentNode.removeChild(flipdownElement);
-            }
-        }
-
-        setInterval(updateDateTime, 1000);
-    </script>
-<!---時鐘-->
-
-
-
     <section id="services">
         <div class="container">
             <div class="row">
@@ -185,9 +103,6 @@
                     </span>
                     <h4 class="service-heading">筋膜放鬆調理 20min</h4>
                     <p class="text-muted"></p>
-                        <p>筋膜刀肌肉放鬆</p>
-                        <p>拔罐舒緩酸痛</p>
-<!--                  <h4 class="service-heading">優惠價 300元整</h4>-->
                 </div>
                 
                 <div class="col-md-4">
@@ -197,12 +112,6 @@
                     </span>
                     <h4 class="service-heading">部位整復調理課程 30min</h4>
                     <p class="text-muted"></p>
-                        <p>體態評估</p>
-                        <p>傳統徒手整復調理</p>
-                        <p>美式活化槍整復調理</p>
-                        <p>筋膜刀肌肉放鬆</p>
-                        <p>拔罐舒緩酸痛</p>
-<!--              <h4 class="service-heading">優惠價 600元整</h4>-->
                 </div>
                 <div class="col-md-4">
                     <span class="fa-stack fa-4x">
@@ -211,14 +120,6 @@
                     </span>
                     <h4 class="service-heading">全身整復調理課程 1hr</h4>
                     <p class="text-muted"></p>
-
-                     <li>3:30-15:15</li>
-                        <p>體態評估</p>
-                        <p>傳統徒手整復調理</p>
-                        <p>美式活化槍整復調理</p>
-                        <p>筋膜刀肌肉放鬆</p>
-                        <p>拔罐舒緩酸痛</p>
-<!--                  <h4 class="service-heading">優惠價 900元整</h4>-->
                 </div>
             </div>
         </div>
