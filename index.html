@@ -20,6 +20,24 @@
     <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
 <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
     <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        /* 您提供的 CSS */
+        html, body { background: #fff; }
+        .current-time, .countdown, .festival {
+            color: #000000;
+            font-size: 40px;
+            text-align: center;
+            font-family: 'Cousine', monospace;
+            margin-bottom: 20px;
+        }
+        /* 新增的CSS，將FlipDown置中 */
+        #flipdown {
+            text-align: center;
+            margin: 0 auto;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="style1.css">
+    <script type="text/javascript" src="script1.js"></script>
 </head>
 
 
@@ -148,7 +166,7 @@
                               formatTimeUnit(now.getMinutes()) + ':' + 
                               formatTimeUnit(now.getSeconds());
 
-        document.getElementById('current-time').innerText = '現在時間為\n' + formattedTime; // 修改此行
+        document.getElementById('current-time').innerText = '現在時間為' + formattedTime; // 修改此行
 
         // Display countdown text until FlipDown starts
         const endOfCountdown = new Date('2024-02-09T00:00:00');
