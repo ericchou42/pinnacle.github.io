@@ -340,3 +340,126 @@ function appendChildren(parent, children) {
     parent.appendChild(el);
   });
 }
+
+
+/**
+ * unregistaer-object
+ **/
+
+new Vue({
+    el: "#unregister-object",
+    data: {
+        // 一開始沒有註冊 penguine，只註冊了 dog 和 cat
+        counter: {
+            dog: 0,
+            cat: 0
+        }
+    },
+    methods: {
+        addCount(name) {
+            this.counter[name]++;
+        }
+    },
+    created() {
+        // 在 created 的時候才建立 penguine 順便設值為 0
+        this.counter.penguin = 0;
+    },
+    updated() {
+        // 讓我們可以知道組件有被更新
+        console.log("view updated");
+    }
+});
+
+/**
+ * register-object
+ **/
+new Vue({
+    el: "#register-object",
+    data: {
+        counter: {
+            dog: 0,
+            cat: 0,
+            penguin: 0 // 一開始就把要響應式變化的資料設定進來
+        }
+    },
+    methods: {
+        addCount(name) {
+            this.counter[name]++;
+        }
+    },
+    created() {
+        // 在 created 的時候才建立 penguine 順便設值為 0
+        this.penguin = 0;
+    },
+    updated() {
+        // 讓我們可以知道組件有被更新
+        console.log("view updated");
+    }
+});
+
+/**
+ * dynamic-set-reactive-property
+ **/
+new Vue({
+    el: "#dynamic-set-reactive-property",
+    data: {
+        counter: {
+            // 一開始沒有註冊 penguine，只註冊了 dog 和 cat
+            dog: 0,
+            cat: 0
+        }
+    },
+    methods: {
+        addCount(name) {
+            this.counter[name]++;
+        }
+    },
+    created() {
+        // 在 created 的時候才建立 penguine 順便設值為 0
+        // 使用 $set 動態新增響應式組件
+        this.$set(this.counter, "penguin", 0);
+    },
+    updated() {
+        // 讓我們可以知道組件有被更新
+        console.log("view updated");
+    }
+});
+
+
+
+/**
+ * create-new-object
+ **/
+new Vue({
+    el: "#create-new-object",
+    data: {
+        counter: {
+            // 一開始沒有註冊 penguine，只註冊了 dog 和 cat
+            dog: 0,
+            cat: 0
+        }
+    },
+    methods: {
+        addCount(name) {
+            this.counter[name]++;
+        }
+    },
+    created() {
+        // 透過建立新的物件來新增物件的屬性
+        this.counter = Object.assign({}, this.counter, {
+            penguin: 0,
+            dog: 5
+        })
+    },
+    beforeUpdate(){
+        console.log(this.$el.querySelector('p').textContent)
+        console.log("view beforeUpdate");
+        this.$nextTick(function(){
+            console.log(this.$el.querySelector('p').textContent)
+        })
+    },
+    updated() {
+        // 讓我們可以知道組件有被更新
+        console.log("view updated");
+    }
+});

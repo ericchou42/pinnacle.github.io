@@ -186,35 +186,41 @@
                     <h3 class="section-subheading text-muted">翻譯</h3>
                 </div>
             </div>
-            <div class="row text-center">
-                <div class="col-md-4">
-                    <span class="fa-stack fa-4x">
-                        <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                        <i class="glyphicon glyphicon-tree-conifer"></i>
-                    </span>
-                    <h4 class="service-heading">文本一</h4>
-                    <p class="text-muted"></p>
-                </div>
-                
-                <div class="col-md-4">
-                    <span class="fa-stack fa-4x">
-                        <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                        <i class="glyphicon glyphicon-heart"></i>
-                    </span>
-                    <h4 class="service-heading">文本二</h4>
-                    <p class="text-muted"></p>
-
-                </div>
-                <div class="col-md-4">
-                    <span class="fa-stack fa-4x">
-                        <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                        <i class="glyphicon glyphicon-tint"></i>
-                    </span>
-                    <h4 class="service-heading">文本三</h4>
-                    <p class="text-muted"></p>
-
-                </div>
+            <h1>為什麼畫面沒有隨資料更新 — 深入 Vue 響應式原理筆記（物件部分）</h1>
+            <hr/>
+            <p class="quotation">此篇文章為整理自 <a href="https://vuejs.org/v2/guide/reactivity.html">Vue 官網 Reactivity in Depth</a> 之筆記</p>
+            <h2>物件部分</h2>
+            <hr/>
+            <h3>畫面不會隨資料更新</h3>
+            <div id="unregister-object" v-cloak="v-cloak">
+              <button @click="addCount('dog')">addDogs</button>
+              <button @click="addCount('cat')">addCats</button>
+              <button @click="addCount('penguin')">addPenguin</button>
+              <p>dog {{ counter.dog }}, cat {{ counter.cat }}, penguin {{ counter.penguin }}</p>
             </div>
+            <div id="register-object" v-cloak="v-cloak">
+              <h3>將需要響應式的資料都設定在 data 中</h3>
+              <button @click="addCount('dog')">addDogs</button>
+              <button @click="addCount('cat')">addCats</button>
+              <button @click="addCount('penguin')">addPenguin</button>
+              <p>dog {{ counter.dog }}, cat {{ counter.cat }}, penguin {{ counter.penguin }}</p>
+            </div>
+            <div id="dynamic-set-reactive-property" v-cloak="v-cloak">
+              <h3>動態添加響應式屬性（vm.$set）</h3>
+              <button @click="addCount('dog')">addDogs</button>
+              <button @click="addCount('cat')">addCats</button>
+              <button @click="addCount('penguin')">addPenguin</button>
+              <p>dog {{ counter.dog }}, cat {{ counter.cat }}, penguin {{ counter.penguin }}</p>
+            </div>
+            <div id="create-new-object" v-cloak="v-cloak">
+              <h3>建立一個新的物件(Object.assign())</h3>
+              <button @click="addCount('dog')">addDogs</button>
+              <button @click="addCount('cat')">addCats</button>
+              <button @click="addCount('penguin')">addPenguin</button>
+              <p>dog {{ counter.dog }}, cat {{ counter.cat }}, penguin {{ counter.penguin }}</p>
+            </div>
+            <h2>陣列部分</h2>
+            <hr/>
         </div>
     </section>
 
