@@ -8,7 +8,7 @@
   <!-- 網頁標題 -->
   <title>登峰照脊</title>
   <style>
-    /* 您提供的 CSS */
+    /* 這是時鐘的 CSS */
     html, body { background: #fff; }
     .current-time, .countdown, .festival {
         color: #000000;
@@ -56,7 +56,7 @@
                 </button>
             
             <!--左上標題-->
-                <a class="navbar-brand page-scroll" href="#page-top">登峰照脊</a>
+                <a class="navbar-brand page-scroll" href="#page-top">這裡是左上標題</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -67,19 +67,19 @@
                     </li>
                     <!--右上菜單-->
                     <li class="">
-                        <a class="page-scroll" href="#services">服務項目</a>
+                        <a class="page-scroll" href="#services">第一標題</a>
                     </li>
                     <li class="">
-                        <a class="page-scroll" href="#portfolio">相簿集</a>
+                        <a class="page-scroll" href="#portfolio">第二標題</a>
                     </li>
                     <li class="">
-                        <a class="page-scroll" href="#about">技術</a>
+                        <a class="page-scroll" href="#about">第三標題</a>
                     </li>
                     <li class="">
-                        <a class="page-scroll" href="#team">相關分享</a>
+                        <a class="page-scroll" href="#team">第四標題</a>
                     </li>
                     <li class="">
-                        <a class="page-scroll" href="#contact">聯絡我</a>
+                        <a class="page-scroll" href="#contact">第四標題</a>
                     </li>
                 </ul>
             </div>
@@ -141,7 +141,7 @@
                                               formatTimeUnit(now.getMinutes()) + ':' + 
                                               formatTimeUnit(now.getSeconds());
             
-                        document.getElementById('current-time').innerText = '現在時間為' + formattedTime; // 修改此行
+                        document.getElementById('current-time').innerText = '現在時間為\n' + formattedTime; // 修改此行
             
                         // Display countdown text until FlipDown starts
                         const endOfCountdown = new Date('2024-02-09T00:00:00');
