@@ -196,6 +196,96 @@
         </div>
     </section>
 
+    <!-- vue -->
+<div id="app">
+    <div class="variable">
+      <h2>Vue.js 使用大括號與變數代換</h2>
+      <hr/>
+      <p>{{name}}（讀音/vjuː/，類似於view）是一套構建用戶界面的漸進式框架。與其他重量級框架不同的是，Vue採用自底向上增量開發的設計。Vue的核心庫只關注視圖層，它不僅易於上手，還便於與第三方庫或既有項目整合。另一方面，當與單文件組件和Vue生態系統支持的庫結合使用時，Vue也完全能夠為複雜的單頁應用程序提供驅動。  </p><br/>
+    </div>
+    <div class="for">
+      <h2>Vue.js 使用 v-for 取出陣列資料</h2>
+      <hr/>
+      <p>官方教程假設你已有
+        <ul class="vfor">
+          <li v-for="skill in skills">{{skill}}</li>
+        </ul>
+        <ul class="vfor">
+          <li v-for="(id,info) in infos">{{id+1}}. {{info.name}}{{info.version}}</li>
+        </ul>
+        <ul class="vfor">
+          <li v-for="(id,info) in infos2">{{id+1}}. {{info.name}}{{info.version}}<span v-for="whatever in info.whatever"> {{whatever}}/</span></li>
+        </ul>
+      </p>
+      <p>如果你是全新的前端開發者，將框架作為你的第一步可能不是最好的主意——掌握好基礎知識再來！之前有其他框架的使用經驗是有幫助的，但不是必需的。</p><br/>
+    </div>
+    <div class="model">
+      <h2>Vue.js 使用者互動 (使用v-model)</h2>
+      <hr/>
+      <div class="input">
+        <label>姓名:
+          <input v-model="details.name"/>
+        </label><br/>
+        <label>訊息:
+          <input v-model="details.message"/>
+        </label><br/>
+        <label>顏色:
+          <input v-model="details.color"/>
+        </label><br/>
+        <div class="habbit" v-for="(id,habbit) in details.habbits">
+          <label>嗜好{{id}}:</label>
+          <input v-model="habbit"/>
+        </div>
+      </div>
+      <div class="content">
+        <div class="name">姓名: {{details.name}}</div>
+        <div class="message">訊息: {{details.message}}</div>
+        <div class="color">顏色: {{details.color}}
+          <div class="block" style="background-color:{{details.color}}"></div>
+        </div>
+        <div class="h" v-for="(id,habbit) in details.habbits">嗜好{{id}}: {{habbit}} </div>
+      </div><br/><br/><br/>
+    </div>
+    <div class="if">
+      <h2>使用 Vue.js 計算呈現資訊 (使用v-if)</h2>
+      <hr/>
+      <label>詳細模式
+        <input type="checkbox" v-model="mode_detail"/>
+      </label>
+      <label>小呈現
+        <input type="radio" v-model="mode_size" name="whatever" value="small"/>
+      </label>
+      <label>大呈現
+        <input type="radio" v-model="mode_size" name="whatever" value="big"/>
+      </label><br/>
+      <div class="book {{mode_detail ? 'detail' : ''}} {{mode_size}}" v-for="book in books"> <img src="{{book.img}}"/>
+        <div class="infos">
+          <h3 class="name" v-if="!mode_detail"><a href="{{book.link_book}}" target="_blank">{{book.name.substring(0,18)}}</a></h3>
+          <h3 class="name" v-if="mode_detail"> <a href="{{book.link_book}}" target="_blank">{{book.name}}</a></h3>
+          <h4 class="author"> <a href="{{book.link_author}}" target="_blank">作者: {{book.author}}</a></h4>
+          <h4 class="publish" v-if="mode_detail">出版社: {{book.publish_house}}</h4>
+          <h4 class="price" v-if="book.is_discount">優惠價: <span class="red">{{book.discount*100}}</span><span>折 </span><span class="red">{{parseInt(book.price * book.discount)}} </span><span>元</span></h4>
+          <h4 class="price" v-if="!book.is_discount">價錢:         <span class="red">{{parseInt(book.price * book.discount)}} </span><span>元</span></h4>
+          <h4 class="publish" v-if="mode_detail">出版社: {{book.date}}</h4>
+        </div>
+      </div>
+    </div><br/><br/>
+    <div class="on">
+      <h2>使用 v-on 呼叫 / method 寫 function 建立 JS 事件</h2>
+      <hr/>
+      <button class="adbtn" v-on:click="add('apple')">＋Apple</button>
+      <button class="adbtn" v-on:click="add('pineapple')">＋Pineapple</button>
+      <button class="adbtn" v-on:click="add('pen')">＋Pen</button>
+      <div class="status">狀態: {{status}}</div>
+      <div class="total">列表共有 {{fruits.length}} 項資料，共有 {{totals.pen}} 支筆</div>
+      <div class="fruit" v-for="(id,fruit) in fruits" track-by="$index">
+        <div class="name">{{id+1}}. {{fruit}}</div><img v-if="fruit=='pen'" src="http://simpleicon.com/wp-content/uploads/pen-15.png"/><img v-if="fruit=='pineapple'" src="https://d30y9cdsu7xlg0.cloudfront.net/png/181946-200.png"/><img v-if="fruit=='apple'" src="http://image.flaticon.com/icons/svg/25/25345.svg"/>
+        <button v-on:click="remove(id,fruit)">X</button>
+      </div>
+    </div>
+  </div>
+<!-- vue -->
+
     <!-- 相簿集 -->
     <section id="portfolio" class="bg-light-gray">
         <div class="container">
@@ -728,6 +818,8 @@
 <script src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js'></script>
 <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
 <script  src="./script.js"></script>
+<!-- 呼叫JS vue -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.min.js'></script>
 
 </body>
 </html>
