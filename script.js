@@ -1,3 +1,60 @@
+//註冊功能
+
+const account = document.querySelector('.account')
+const signBtn = document.querySelector('.signBtn')
+const password = document.querySelector('.password')
+
+signBtn.addEventListener('click', function (e) {
+  if (account.value == '' || password.value == '') {
+    alert('欄位請勿空白')
+    return
+  }
+  callSignup()
+})
+
+function callSignup() {
+  let obj = {}
+  obj.email = account.value
+  obj.password = password.value
+  axios.post('https://hexschool-tutorial.herokuapp.com/api/signup', obj)
+    .then(function (response) {
+      console.log('response.data:', response.data)
+      if (response.data.message == "帳號註冊成功") {
+        alert("恭喜帳號註冊成功");
+      } else {
+        alert("帳號註冊失敗，有可能有人用你的email註冊！");
+      }
+      account.value = "";
+      password.value = "";
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+}
+
+//登入功能
+const signin = document.querySelector('.signin')
+const signinBtn = document.querySelector('.signinBtn')
+const passwordSignin = document.querySelector('.passwordSignin')
+
+signinBtn.addEventListener('click', function (e) {
+  if (signin.value == '' || passwordSignin.value == '') {
+    alert('請輸入正確資訊')
+    return
+  }
+  callSignin()
+})
+
+function callSignin() {
+  let obj = {}
+  obj.email = signin.value
+  obj.password = passwordSignin.value
+  axios.post('https://hexschool-tutorial.herokuapp.com/api/signin', obj)
+    .then(function (response) {
+      console.log('response.data:', response.data)
+      if (response.data.message == "登入成功") {
+     
+//開始
 $(function() {
     $('a.page-scroll').bind('click', function(event) {
         var $anchor = $(this);
