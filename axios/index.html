@@ -6,3 +6,11 @@
   </div>
   <!-- 請於此處貼上 axios CDN 連結-->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  axios.get('https://randomuser.me/api/')
+    .then(res => {
+        console.log(res.data.results);
+    })
+    .catch(err => {
+        console.log(err.response)
+    })
