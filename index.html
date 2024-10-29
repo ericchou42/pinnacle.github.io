@@ -189,14 +189,27 @@
                 <div class="col-lg-12 text-center">
                     <h2 class="section-heading">標題一</h2>
                     <h3 class="section-subheading text-muted">詳細說明</h3>
-                    <select id="tools">
-                        <option value="" disabled="" selected="">請選擇工具</option>
-                        <option value="https://handsometommy.replit.app/colorpick/colorpick.html">色彩學大師</option><option value="https://handsometommy.replit.app/photo_information">照片的本來面目</option>
-                        <option value="https://handsometommy.replit.app/convert_time/newDate.html">時區轉換器</option><option value="https://handsometommy.replit.app/happiness">幸福卡抽抽樂</option><option value="https://handsometommy.replit.app/mosaic_img/">社恐救星</option><option value="https://handsometommy.replit.app/financial">財務預測曲線</option><option value="https://mojibake-handsometommy.replit.app/">亂碼轉換器</option><option value="https://mojibake-handsometommy.replit.app/download">影片一鍵下載</option>
-                        <option value="https://stock-compare-tommy09230925.replit.app/">股票ETF可視化比較</option>
-                        <option value="https://mojibake-handsometommy.replit.app/remove_bg_page">人物一鍵去背</option>
-                        <option value="https://function-tommy09230925.replit.app/">方程式計算機</option>
-                        <option value="https://noisereduce-tommy09230925.replit.app/">音頻降噪節拍檢測</option>
+                    <select style="width:180px" onchange="window.open(this.options[this.selectedIndex].value)">
+                        <option value="" disabled="" selected="">請選擇網站</option>
+                         <optgroup label="作品">
+                            <option value="/cv">履歷</option>
+                            <option value="https://handsometommy.replit.app/colorpick/colorpick.html">色彩學大師</option>
+                            <option value="https://handsometommy.replit.app/photo_information">照片的本來面目</option>
+                            <option value="https://handsometommy.replit.app/convert_time/newDate.html">時區轉換器</option>
+                            <option value="https://handsometommy.replit.app/happiness">幸福卡抽抽樂</option>
+                            <option value="https://handsometommy.replit.app/mosaic_img/">社恐救星</option>
+                            <option value="https://handsometommy.replit.app/financial">財務預測曲線</option>
+                            <option value="https://mojibake-handsometommy.replit.app/">亂碼轉換器</option>
+                            <option value="https://mojibake-handsometommy.replit.app/download">影片一鍵下載</option>
+                            <option value="https://stock-compare-tommy09230925.replit.app/">股票ETF可視化比較</option>
+                            <option value="https://mojibake-handsometommy.replit.app/remove_bg_page">人物一鍵去背</option>
+                            <option value="https://function-tommy09230925.replit.app/">方程式計算機</option>
+                            <option value="https://noisereduce-tommy09230925.replit.app/">音頻降噪節拍檢測</option>
+                            <option value="https://mojibake-handsometommy.replit.app/remove_bg_page">照片去背</option>
+                        <optgroup selected="true" label="常用網頁"> 
+                            <option value="http://www.google.com">google網頁</option>
+                            <optgroup label="影音網頁"> 
+                            <option value="https://youtube.com">Youtbue</option>
                     </select>
                 </div>
 
