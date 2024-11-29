@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>每月預算計算器</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .range-container {
             display: flex;
@@ -12,185 +11,216 @@
         }
         .value-text {
             margin-left: 10px;
-            font-weight: bold;
         }
         .expense-row {
             margin-bottom: 15px;
         }
     </style>
 </head>
-<body class="bg-light p-5">
-    <div class="container" id="budgetCalculator">
-        <h1 class="text-center mb-4">每月預算計算器</h1>
-        
-        <div class="row mb-3">
+<body>
+<div id="budgetCalculator" class="container">
+    <h1 class="text-center mb-4">每月預算計算器</h1>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="yearSelect">年份:</label>
+            <select id="yearSelect" class="form-control">
+                <script>
+                    const currentYear = new Date().getFullYear();
+                    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+                        document.write(`<option ${i === currentYear ? 'selected' : ''}>${i}</option>`);
+                    }
+                </script>
+            </select>
+        </div>
+        <div class="col-12 col-md-6">
+            <label for="monthSelect">月份:</label>
+            <select id="monthSelect" class="form-control">
+                <script>
+                    for (let i = 1; i <= 12; i++) {
+                        document.write(`<option ${new Date().getMonth() + 1 === i ? 'selected' : ''}>${i}</option>`);
+                    }
+                </script>
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-6">
+            <label for="monthlyIncomeRange">每月收入(萬):</label>
+            <div class="range-container">
+                <input type="range" id="monthlyIncomeRange" class="form-range" min="1" max="10" step="0.5" value="5">
+                <span id="monthlyIncomeValue" class="value-text">5</span>
+                <span class="value-text">萬</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="expensesContainer">
+        <div class="expense-row row mb-3">
             <div class="col-12 col-md-6">
-                <label for="monthlyIncome" class="form-label">每月收入(萬):</label>
+                <label for="expenseName1">開銷名稱:</label>
+                <input type="text" id="expenseName1" class="form-control expense-name" placeholder="例如：房租、伙食費">
+            </div>
+            <div class="col-12 col-md-6">
+                <label for="expenseRange1">開銷金額(萬):</label>
                 <div class="range-container">
-                    <input type="range" class="form-range" id="monthlyIncome" min="0" max="50" value="5" step="0.1" oninput="updateValue('monthlyIncome', 'monthlyIncomeValue')">
-                    <span id="monthlyIncomeValue" class="value-text">5</span>
+                    <input type="range" id="expenseRange1" class="form-range expense-range" min="0" max="5" step="0.5" value="1">
+                    <span id="expenseValue1" class="expense-amount-value value-text">1</span>
                     <span class="value-text">萬</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="expensesContainer">
-            <div class="row expense-row">
-                <div class="col-12 col-md-6">
-                    <label class="form-label">開銷名稱:</label>
-                    <input type="text" class="form-control expense-name" placeholder="如：租金、伙食費">
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">開銷金額(萬):</label>
-                    <div class="range-container">
-                        <input type="range" class="form-range expense-amount-range" min="0" max="50" value="1" step="0.1" 
-                               oninput="updateExpenseValue(this)">
-                        <span class="expense-amount-value value-text">1</span>
-                        <span class="value-text">萬</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-3">
-            <div class="col-12">
-                <button id="addExpenseBtn" class="btn btn-secondary me-2">+ 新增開銷</button>
-                <button onclick="calculateBudget()" class="btn btn-primary me-2">計算預算</button>
-                <button onclick="generatePDF()" class="btn btn-success">匯出PDF</button>
-            </div>
-        </div>
-
-        <div id="resultArea" class="mt-4 d-none">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">預算明細</h5>
-                    <p>每月總收入: <span id="totalIncomeDisplay"></span></p>
-                    <p>總開銷: <span id="totalExpensesDisplay"></span></p>
-                    <p>剩餘金額: <span id="remainingAmountDisplay"></span></p>
-                    <table class="table" id="expenseDetailsTable">
-                        <thead>
-                            <tr>
-                                <th>開銷名稱</th>
-                                <th>金額</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenseDetailsBody"></tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // 更新一般滑桿數值
-        function updateValue(rangeId, valueId) {
-            const rangeInput = document.getElementById(rangeId);
-            const valueSpan = document.getElementById(valueId);
-            valueSpan.textContent = rangeInput.value;
-        }
+    <div class="row mt-3">
+        <div class="col-12">
+            <button id="addExpenseBtn" class="btn btn-secondary me-2">+ 新增開銷</button>
+            <button id="calculateBudgetBtn" class="btn btn-primary me-2">計算預算</button>
+            <button id="exportPdfBtn" class="btn btn-success">匯出PDF</button>
+        </div>
+    </div>
 
-        // 更新開銷滑桿數值
-        function updateExpenseValue(rangeInput) {
-            const valueSpan = rangeInput.nextElementSibling;
-            valueSpan.textContent = rangeInput.value;
-        }
+    <div id="resultArea" class="mt-4 d-none">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">預算明細</h5>
+                <p>預算年月: <span id="budgetPeriodDisplay"></span></p>
+                <p>每月總收入: <span id="totalIncomeDisplay"></span></p>
+                <p>總開銷: <span id="totalExpensesDisplay"></span></p>
+                <p>剩餘金額: <span id="remainingAmountDisplay"></span></p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>開銷名稱</th>
+                            <th>金額</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseDetailsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // 新增開銷按鈕事件
-        document.getElementById('addExpenseBtn').addEventListener('click', function() {
-            const expensesContainer = document.getElementById('expensesContainer');
-            const newExpenseRow = document.createElement('div');
-            newExpenseRow.className = 'row expense-row';
-            newExpenseRow.innerHTML = `
-                <div class="col-12 col-md-6">
-                    <label class="form-label">開銷名稱:</label>
-                    <input type="text" class="form-control expense-name" placeholder="如：租金、伙食費">
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const monthlyIncomeRange = document.getElementById('monthlyIncomeRange');
+    const monthlyIncomeValue = document.getElementById('monthlyIncomeValue');
+    const expensesContainer = document.getElementById('expensesContainer');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const calculateBudgetBtn = document.getElementById('calculateBudgetBtn');
+    const resultArea = document.getElementById('resultArea');
+    let expenseCounter = 1;
+
+    // Update income display
+    monthlyIncomeRange.addEventListener('input', () => {
+        monthlyIncomeValue.textContent = monthlyIncomeRange.value;
+        
+        // Dynamically update max expense ranges
+        const expenseRanges = document.querySelectorAll('.expense-range');
+        expenseRanges.forEach(range => {
+            range.max = monthlyIncomeRange.value;
+            // Adjust current value if it exceeds new max
+            if (parseFloat(range.value) > parseFloat(range.max)) {
+                range.value = range.max;
+                // Update corresponding value display
+                const valueSpan = range.nextElementSibling;
+                valueSpan.textContent = range.value;
+            }
+        });
+    });
+
+    // Function to add event listeners to expense ranges
+    function setupExpenseRangeListeners(expenseRange) {
+        const expenseValue = expenseRange.nextElementSibling;
+        expenseRange.addEventListener('input', () => {
+            expenseValue.textContent = expenseRange.value;
+        });
+    }
+
+    // Initial setup for first expense range
+    const firstExpenseRange = document.getElementById('expenseRange1');
+    firstExpenseRange.max = monthlyIncomeRange.value;
+    setupExpenseRangeListeners(firstExpenseRange);
+
+    // Add new expense row
+    addExpenseBtn.addEventListener('click', () => {
+        expenseCounter++;
+        const newExpenseRow = document.createElement('div');
+        newExpenseRow.className = 'expense-row row mb-3';
+        newExpenseRow.innerHTML = `
+            <div class="col-12 col-md-6">
+                <label for="expenseName${expenseCounter}">開銷名稱:</label>
+                <input type="text" id="expenseName${expenseCounter}" class="form-control expense-name" placeholder="例如：房租、伙食費">
+            </div>
+            <div class="col-12 col-md-6">
+                <label for="expenseRange${expenseCounter}">開銷金額(萬):</label>
+                <div class="range-container">
+                    <input type="range" id="expenseRange${expenseCounter}" class="form-range expense-range" 
+                           min="0" max="${monthlyIncomeRange.value}" step="0.5" value="1">
+                    <span id="expenseValue${expenseCounter}" class="expense-amount-value value-text">1</span>
+                    <span class="value-text">萬</span>
                 </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">開銷金額(萬):</label>
-                    <div class="range-container">
-                        <input type="range" class="form-range expense-amount-range" min="0" max="50" value="1" step="0.1" 
-                               oninput="updateExpenseValue(this)">
-                        <span class="expense-amount-value value-text">1</span>
-                        <span class="value-text">萬</span>
-                    </div>
-                </div>
-            `;
-            expensesContainer.appendChild(newExpenseRow);
+            </div>
+        `;
+        expensesContainer.appendChild(newExpenseRow);
+
+        // Setup listeners for new expense range
+        const newExpenseRange = document.getElementById(`expenseRange${expenseCounter}`);
+        setupExpenseRangeListeners(newExpenseRange);
+    });
+
+    // Calculate budget
+    calculateBudgetBtn.addEventListener('click', () => {
+        const yearSelect = document.getElementById('yearSelect');
+        const monthSelect = document.getElementById('monthSelect');
+        
+        const totalIncome = parseFloat(monthlyIncomeRange.value);
+        const expenseNames = document.querySelectorAll('.expense-name');
+        const expenseRanges = document.querySelectorAll('.expense-range');
+        
+        let totalExpenses = 0;
+        const expenseDetails = [];
+
+        // Calculate total expenses and prepare details
+        expenseNames.forEach((nameInput, index) => {
+            const amount = parseFloat(expenseRanges[index].value);
+            totalExpenses += amount;
+            
+            if (nameInput.value.trim() !== '') {
+                expenseDetails.push({
+                    name: nameInput.value,
+                    amount: amount
+                });
+            }
         });
 
-        function calculateBudget() {
-            // 獲取每月收入
-            const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value);
-            
-            // 蒐集所有開銷
-            const expenseNameInputs = document.querySelectorAll('.expense-name');
-            const expenseAmountRanges = document.querySelectorAll('.expense-amount-range');
-            
-            let totalExpenses = 0;
-            const expenseDetails = [];
+        // Update result display
+        document.getElementById('budgetPeriodDisplay').textContent = 
+            `${yearSelect.value}年${monthSelect.value}月`;
+        document.getElementById('totalIncomeDisplay').textContent = `${totalIncome} 萬`;
+        document.getElementById('totalExpensesDisplay').textContent = `${totalExpenses.toFixed(1)} 萬`;
+        document.getElementById('remainingAmountDisplay').textContent = 
+            `${(totalIncome - totalExpenses).toFixed(1)} 萬`;
 
-            // 驗證並計算開銷
-            for (let i = 0; i < expenseNameInputs.length; i++) {
-                const name = expenseNameInputs[i].value.trim();
-                const amount = parseFloat(expenseAmountRanges[i].value);
+        // Populate expense details table
+        const expenseDetailsBody = document.getElementById('expenseDetailsBody');
+        expenseDetailsBody.innerHTML = expenseDetails.map(expense => 
+            `<tr><td>${expense.name}</td><td>${expense.amount} 萬</td></tr>`
+        ).join('');
 
-                // 跳過空白或無效的開銷
-                if (name && !isNaN(amount) && amount > 0) {
-                    totalExpenses += amount;
-                    expenseDetails.push({ name, amount });
-                }
-            }
+        // Show result area
+        resultArea.classList.remove('d-none');
+    });
 
-            // 計算剩餘金額
-            const remainingAmount = monthlyIncome - totalExpenses;
+    // Export PDF (placeholder)
+    document.getElementById('exportPdfBtn').addEventListener('click', () => {
+        alert('PDF匯出功能尚未實作');
+    });
+});
+</script>
 
-            // 顯示結果
-            const resultArea = document.getElementById('resultArea');
-            const totalIncomeDisplay = document.getElementById('totalIncomeDisplay');
-            const totalExpensesDisplay = document.getElementById('totalExpensesDisplay');
-            const remainingAmountDisplay = document.getElementById('remainingAmountDisplay');
-            const expenseDetailsBody = document.getElementById('expenseDetailsBody');
-
-            // 清空之前的明細
-            expenseDetailsBody.innerHTML = '';
-
-            // 填入明細
-            expenseDetails.forEach(expense => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${expense.name}</td>
-                    <td>${expense.amount.toFixed(2)} 萬</td>
-                `;
-                expenseDetailsBody.appendChild(row);
-            });
-
-            // 更新顯示
-            totalIncomeDisplay.textContent = monthlyIncome.toFixed(2) + ' 萬';
-            totalExpensesDisplay.textContent = totalExpenses.toFixed(2) + ' 萬';
-            remainingAmountDisplay.textContent = remainingAmount.toFixed(2) + ' 萬';
-
-            // 顯示結果區域
-            resultArea.classList.remove('d-none');
-        }
-
-        // 匯出PDF功能
-        function generatePDF() {
-            const element = document.getElementById('budgetCalculator');
-            const opt = {
-                margin:       1,
-                filename:     '月度預算計算結果.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            // 確保先計算預算
-            calculateBudget();
-
-            // 生成PDF
-            html2pdf().set(opt).from(element).save();
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
