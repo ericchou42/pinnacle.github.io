@@ -28,7 +28,7 @@
             <div class="col-12 col-md-6">
                 <label for="monthlyIncome" class="form-label">每月收入(萬):</label>
                 <div class="range-container">
-                    <input type="range" class="form-range" id="monthlyIncome" min="0" max="50" value="5" step="0.1" oninput="updateValue('monthlyIncome', 'monthlyIncomeValue')">
+                    <input type="range" class="form-range" id="monthlyIncome" min="0" max="10" value="5" step="0.1" oninput="updateValue('monthlyIncome', 'monthlyIncomeValue')">
                     <span id="monthlyIncomeValue" class="value-text">5</span>
                     <span class="value-text">萬</span>
                 </div>
@@ -44,7 +44,7 @@
                 <div class="col-12 col-md-6">
                     <label class="form-label">開銷金額(萬):</label>
                     <div class="range-container">
-                        <input type="range" class="form-range expense-amount-range" min="0" max="50" value="1" step="0.1" 
+                        <input type="range" class="form-range expense-amount-range" min="0" max="10" value="1" step="0.1" 
                                oninput="updateExpenseValue(this)">
                         <span class="expense-amount-value value-text">1</span>
                         <span class="value-text">萬</span>
