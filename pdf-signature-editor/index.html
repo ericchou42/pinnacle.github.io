@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF簽名編輯器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.4.0/pdf-lib.min.js"></script>
+    <style>
+        body {
+            font-family: '微軟正黑體', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #pdf-upload {
+            margin-bottom: 20px;
+        }
+        #pdf-container {
+            position: relative;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        #pdf-canvas {
+            border: 1px solid #000;
+            max-width: 100%;
+        }
+        #signature-overlay {
+            position: absolute;
+            border: 2px dashed red;
+            cursor: move;
+            width: 100px;
+            height: 50px;
+        }
+        #signature-canvas {
+            border: 1px solid #000;
+            background-color: white;
+            margin-top: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF簽名編輯器</h1>
+    
+    <input type="file" id="pdf-upload" accept=".pdf">
+    
+    <div id="pdf-container">
+        <canvas id="pdf-canvas"></canvas>
+        <div id="signature-overlay"></div>
+    </div>
+
+    <div class="controls">
+        <canvas id="signature-canvas" width="400" height="200">
+            您的瀏覽器不支援Canvas
+        </canvas>
+        
+        <div>
+            <button id="clear-signature-btn">清除簽名</button>
+            <button id="add-signature-btn" disabled>加入簽名</button>
+            <button id="save-pdf-btn" disabled>儲存PDF</button>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+
+        const pdfUpload = document.getElementById('pdf-upload');
+        const pdfCanvas = document.getElementById('pdf-canvas');
+        const signatureCanvas = document.getElementById('signature-canvas');
+        const signatureOverlay = document.getElementById('signature-overlay');
+        const addSignatureBtn = document.getElementById('add-signature-btn');
+        const clearSignatureBtn = document.getElementById('clear-signature-btn');
+        const savePdfBtn = document.getElementById('save-pdf-btn');
+
+        const pdfCtx = pdfCanvas.getContext('2d');
+        const signatureCtx = signatureCanvas.getContext('2d');
+
+        let pdfDocument = null;
+        let currentPage = null;
+        let signatureImage = null;
+        let pdfScale = 1.5;
+        let signaturePosition = { x: 0, y: 0 };
+        let originalPdfBytes = null;
+
+        // 簽名繪製
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        signatureCanvas.addEventListener('mousedown', startDrawing);
+        signatureCanvas.addEventListener('mousemove', draw);
+        signatureCanvas.addEventListener('mouseup', stopDrawing);
+        signatureCanvas.addEventListener('mouseout', stopDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            signatureCtx.beginPath();
+            signatureCtx.moveTo(lastX, lastY);
+            signatureCtx.lineTo(e.offsetX, e.offsetY);
+            signatureCtx.strokeStyle = 'black';
+            signatureCtx.lineWidth = 2;
+            signatureCtx.lineCap = 'round';
+            signatureCtx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // 清除簽名
+        clearSignatureBtn.addEventListener('click', () => {
+            signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            signatureImage = null;
+            addSignatureBtn.disabled = true;
+            savePdfBtn.disabled = true;
+            signatureOverlay.style.backgroundImage = 'none';
+        });
+
+        // PDF上傳和渲染
+        pdfUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const fileReader = new FileReader();
+                fileReader.onload = async (event) => {
+                    originalPdfBytes = new Uint8Array(event.target.result);
+                    const typedArray = originalPdfBytes;
+                    pdfDocument = await pdfjsLib.getDocument({data: typedArray}).promise;
+                    
+                    // 渲染第一頁
+                    currentPage = await pdfDocument.getPage(1);
+                    const viewport = currentPage.getViewport({scale: pdfScale});
+                    
+                    pdfCanvas.height = viewport.height;
+                    pdfCanvas.width = viewport.width;
+                    
+                    const renderContext = {
+                        canvasContext: pdfCtx,
+                        viewport: viewport
+                    };
+                    
+                    await currentPage.render(renderContext);
+                    
+                    // 初始化簽名位置為PDF右下角
+                    signaturePosition = { 
+                        x: pdfCanvas.width - 150, 
+                        y: 50 
+                    };
+                    signatureOverlay.style.left = `${signaturePosition.x}px`;
+                    signatureOverlay.style.top = `${signaturePosition.y}px`;
+                };
+                fileReader.readAsArrayBuffer(file);
+            }
+        });
+
+        // 自定義位置拖動
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        signatureOverlay.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - signatureOverlay.offsetLeft;
+            offsetY = e.clientY - signatureOverlay.offsetTop;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const containerRect = pdfCanvas.getBoundingClientRect();
+            let newX = e.clientX - containerRect.left - offsetX;
+            let newY = e.clientY - containerRect.top - offsetY;
+
+            // 限制在畫布範圍內
+            newX = Math.max(0, Math.min(newX, pdfCanvas.width - signatureOverlay.offsetWidth));
+            newY = Math.max(0, Math.min(newY, pdfCanvas.height - signatureOverlay.offsetHeight));
+
+            signatureOverlay.style.left = `${newX}px`;
+            signatureOverlay.style.top = `${newY}px`;
+            
+            signaturePosition = { x: newX, y: newY };
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // 加入簽名
+        addSignatureBtn.addEventListener('click', () => {
+            signatureImage = signatureCanvas.toDataURL('image/png');
+            
+            // 顯示簽名位置預覽
+            signatureOverlay.style.backgroundImage = `url(${signatureImage})`;
+            signatureOverlay.style.backgroundSize = 'cover';
+            
+            savePdfBtn.disabled = false;
+        });
+
+        // 儲存PDF
+        savePdfBtn.addEventListener('click', async () => {
+            if (!originalPdfBytes || !signatureImage) return;
+
+            try {
+                // 載入PDF
+                const pdfDoc = await PDFLib.PDFDocument.load(originalPdfBytes);
+
+                // 嵌入簽名圖像
+                const pngImage = await pdfDoc.embedPng(signatureImage);
+                
+                // 取得第一頁
+                const pages = pdfDoc.getPages();
+                const firstPage = pages[0];
+                const { width, height } = firstPage.getSize();
+                
+                // 計算簽名位置（需要轉換座標系）
+                const pageHeight = height;
+                const signatureX = signaturePosition.x / pdfScale;
+                const signatureY = (pdfCanvas.height - signaturePosition.y - 50) / pdfScale;
+
+                // 在指定位置加入簽名
+                firstPage.drawImage(pngImage, {
+                    x: signatureX,
+                    y: signatureY,
+                    width: 100,
+                    height: 50
+                });
+
+                // 儲存PDF
+                const pdfBytes = await pdfDoc.save();
+                
+                // 建立下載連結
+                const blob = new Blob([pdfBytes], {type: 'application/pdf'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '已簽名文件.pdf';
+                link.click();
+            } catch (error) {
+                console.error('儲存PDF時出錯:', error);
+                alert('儲存PDF失敗，請重試');
+            }
+        });
+
+        // 監聽簽名繪製，啟用加入簽名按鈕
+        signatureCanvas.addEventListener('mouseup', () => {
+            if (signatureCtx.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height).data.some(channel => channel !== 0)) {
+                addSignatureBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
