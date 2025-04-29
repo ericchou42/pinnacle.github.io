@@ -7,8 +7,8 @@
 	<link rel="stylesheet" href="./style.css">
 	<!-- 引入html2pdf.js庫 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-	<!-- 引入Google翻譯API -->
-	<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+	<!-- 引入Google翻譯API
+	<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script> -->
 </head>
 
 <body>
@@ -423,30 +423,17 @@
 
 		<!-- 添加PDF下載功能的JavaScript代碼 -->
 		<script>
-			document.getElementById('download-pdf').addEventListener('click', function(e) {
+			document.getElementById('translate-btn').addEventListener('click', function(e) {
 				e.preventDefault();
 				
-				// 獲取要轉換的元素
-				const element = document.querySelector('.page-wrap');
+				// 獲取當前頁面URL
+				const currentUrl = window.location.href;
 				
-				// 配置選項
-				const options = {
-					margin: 10,
-					filename: '周恩哲_Eric_CV.pdf',
-					image: { type: 'jpeg', quality: 0.98 },
-					html2canvas: { scale: 2, useCORS: true },
-					jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-				};
+				// 構建Google翻譯URL
+				const translateUrl = 'https://translate.google.com/translate?sl=zh-TW&tl=en&u=' + encodeURIComponent(currentUrl);
 				
-				// 執行轉換前隱藏下載按鈕
-				const downloadBtn = this;
-				downloadBtn.style.display = 'none';
-				
-				// 執行PDF轉換
-				html2pdf().from(element).set(options).save().then(function() {
-					// 轉換完成後顯示按鈕
-					downloadBtn.style.display = 'block';
-				});
+				// 在新頁面中打開翻譯後的頁面
+				window.open(translateUrl, '_blank');
 			});
 		</script>
 
