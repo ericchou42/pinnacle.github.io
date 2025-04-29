@@ -37,7 +37,7 @@
 						<li><a href="#block4">擅長工具</a></li>
 						<li><a href="RD_周恩哲.pdf">English CV</a></li>
 						<li><a href="#" id="download-pdf" style="color: #D24655;">下載為PDF</a></li>
-						<li><a href="#" id="download-pdf-debug" style="color: #ff8c00;">PDF測試</a></li>
+						<li><a href="#" id="translate-btn" style="color: #1E90FF;">翻譯成英文</a></li>
 					</ul>
 				</nav>
 			</header>
@@ -421,6 +421,96 @@
 				console.log('頁面及所有資源已完全載入');
 			});
 		</script>
+        <!-- Google翻譯API初始化 -->
+		<script>
+			function googleTranslateElementInit() {
+				new google.translate.TranslateElement({
+					pageLanguage: 'zh-TW',
+					includedLanguages: 'en',
+					autoDisplay: false,
+					layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+				}, 'google_translate_element');
+			}
+			
+			// 當翻譯按鈕被點擊時
+			document.getElementById('translate-btn').addEventListener('click', function(e) {
+				e.preventDefault();
+				
+				// 自動選擇英文
+				var translateCombo = document.querySelector('.goog-te-combo');
+				if (translateCombo) {
+					translateCombo.value = 'en';
+					translateCombo.dispatchEvent(new Event('change'));
+				} else {
+					// 如果Google翻譯元素尚未初始化，先顯示它
+					document.getElementById('google_translate_element').style.display = 'block';
+					
+					// 稍後再嘗試選擇英文
+					setTimeout(function() {
+						var translateCombo = document.querySelector('.goog-te-combo');
+						if (translateCombo) {
+							translateCombo.value = 'en';
+							translateCombo.dispatchEvent(new Event('change'));
+						}
+					}, 1000);
+				}
+				
+				// 更改按鈕文字
+				this.textContent = '翻譯中...';
+				
+				// 2秒後恢復按鈕文字
+				setTimeout(() => {
+					this.textContent = '翻譯成英文';
+				}, 2000);
+			});
+		</script>
+
+		<!-- 添加PDF下載功能的JavaScript代碼 -->
+		<script>
+			document.getElementById('translate-btn').addEventListener('click', function(e) {
+				e.preventDefault();
+				
+				// 獲取當前頁面URL
+				const currentUrl = window.location.href;
+				
+				// 構建Google翻譯URL
+				const translateUrl = 'https://translate.google.com/translate?sl=zh-TW&tl=en&u=' + encodeURIComponent(currentUrl);
+				
+				// 在新頁面中打開翻譯後的頁面
+				window.open(translateUrl, '_blank');
+			});
+		</script>
+
+		<!-- 添加CSS樣式，隱藏Google翻譯工具欄 -->
+		<style>
+			.goog-te-banner-frame {
+				display: none !important;
+			}
+			
+			body {
+				top: 0 !important;
+			}
+			
+			.goog-te-gadget {
+				font-size: 0 !important;
+			}
+			
+			.goog-te-gadget div {
+				display: inline;
+			}
+			
+			.goog-te-menu-value span {
+				display: none;
+			}
+			
+			.goog-te-menu-value span:first-child {
+				display: none;
+			}
+			
+			.goog-te-gadget-simple {
+				display: none !important;
+			}
+		</style>
 	</body>
 
 	</html>
