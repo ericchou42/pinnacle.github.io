@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人預算與記帳系統 (IndexedDB 版)</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入 localForage 來簡化 IndexedDB 操作 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div id="app" class="max-w-5xl mx-auto p-6" v-cloak>
+        <header class="mb-8 flex justify-between items-end border-b pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">預算與記帳系統</h1>
+                <p class="text-sm text-gray-500 mt-1">資料安全儲存於瀏覽器 IndexedDB</p>
+            </div>
+            <div class="flex items-end gap-4">
+                <div class="flex flex-col gap-1">
+                    <button @click="exportData" class="text-xs bg-gray-600 text-white px-2 py-1 rounded hover:bg-gray-700">匯出備份</button>
+                    <label class="text-xs bg-gray-600 text-white px-2 py-1 rounded hover:bg-gray-700 cursor-pointer text-center">
+                        匯入備份
+                        <input type="file" @change="importData" accept=".json" class="hidden">
+                    </label>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">選擇月份</label>
+                    <input type="month" v-model="currentMonth" class="border rounded p-2 border-gray-300">
+                </div>
+            </div>
+        </header>
+
+        <!-- 導覽列 -->
+        <div class="flex space-x-2 mb-6">
+            <button v-for="t in tabs" :key="t.id" @click="currentTab = t.id"
+                :class="['px-4 py-2 rounded-t-lg font-medium', currentTab === t.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300']">
+                {{ t.name }}
+            </button>
+        </div>
+
+        <!-- 頁籤內容 -->
+        <div class="bg-white p-6 rounded-b-lg shadow min-h-[500px]" v-if="isDataLoaded">
+            
+            <!-- 1. 預算編列 -->
+            <div v-show="currentTab === 'budget'">
+                <form @submit.prevent="addBudget" class="flex gap-4 mb-6 bg-blue-50 p-4 rounded">
+                    <select v-model="budgetForm.category" class="border p-2 rounded w-1/4" required>
+                        <option value="" disabled>選擇分類</option>
+                        <option v-for="cat in categories" :value="cat">{{ cat }}</option>
+                    </select>
+                    <select v-model="budgetForm.paymentMethod" class="border p-2 rounded w-1/4" required>
+                        <option value="" disabled>支付方式</option>
+                        <option v-for="pm in paymentMethods" :value="pm">{{ pm }}</option>
+                    </select>
+                    <input type="number" v-model="budgetForm.amount" placeholder="預算金額" class="border p-2 rounded w-1/4" required min="1">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-1/4 hover:bg-blue-700">新增預算</button>
+                </form>
+
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-3">分類</th>
+                            <th class="p-3">支付方式</th>
+                            <th class="p-3 text-right">金額</th>
+                            <th class="p-3 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="b in filteredBudgets" :key="b.id" class="border-b hover:bg-gray-50">
+                            <td class="p-3">{{ b.category }}</td>
+                            <td class="p-3 text-gray-500">{{ b.paymentMethod }}</td>
+                            <td class="p-3 text-right font-medium">${{ b.amount.toLocaleString() }}</td>
+                            <td class="p-3 text-center">
+                                <button @click="deleteItem('budgets', b.id)" class="text-red-500 hover:underline">刪除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 2. 花費紀錄 -->
+            <div v-show="currentTab === 'expense'">
+                <form @submit.prevent="addExpense" class="grid grid-cols-6 gap-4 mb-6 bg-green-50 p-4 rounded">
+                    <input type="date" v-model="expenseForm.date" class="border p-2 rounded col-span-1" required>
+                    <input type="text" v-model="expenseForm.title" placeholder="項目說明" class="border p-2 rounded col-span-1" required>
+                    <select v-model="expenseForm.category" class="border p-2 rounded col-span-1" required>
+                        <option value="" disabled>選擇分類</option>
+                        <option v-for="cat in categories" :value="cat">{{ cat }}</option>
+                    </select>
+                    <select v-model="expenseForm.paymentMethod" class="border p-2 rounded col-span-1" required>
+                        <option value="" disabled>支付方式</option>
+                        <option v-for="pm in paymentMethods" :value="pm">{{ pm }}</option>
+                    </select>
+                    <input type="number" v-model="expenseForm.amount" placeholder="金額" class="border p-2 rounded col-span-1" required min="1">
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded col-span-1 hover:bg-green-700">新增紀錄</button>
+                </form>
+
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-3">日期</th>
+                            <th class="p-3">項目</th>
+                            <th class="p-3">分類</th>
+                            <th class="p-3">支付方式</th>
+                            <th class="p-3 text-right">金額</th>
+                            <th class="p-3 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="e in filteredExpenses" :key="e.id" class="border-b hover:bg-gray-50">
+                            <td class="p-3">{{ e.date }}</td>
+                            <td class="p-3">{{ e.title }}</td>
+                            <td class="p-3"><span class="bg-gray-200 px-2 py-1 rounded text-sm">{{ e.category }}</span></td>
+                            <td class="p-3">{{ e.paymentMethod }}</td>
+                            <td class="p-3 text-right font-medium text-red-600">-${{ e.amount.toLocaleString() }}</td>
+                            <td class="p-3 text-center">
+                                <button @click="deleteItem('expenses', e.id)" class="text-red-500 hover:underline">刪除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 3. 結算報表 -->
+            <div v-show="currentTab === 'report'">
+                <div class="grid grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <table class="w-full text-left border-collapse border">
+                            <thead>
+                                <tr class="bg-blue-50 border-b">
+                                    <th class="p-2 border-r">分類</th>
+                                    <th class="p-2 border-r text-right">預算</th>
+                                    <th class="p-2 border-r text-right">實際花費</th>
+                                    <th class="p-2 text-right">差額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="row in reportByCategory" :key="row.category" class="border-b">
+                                    <td class="p-2 border-r">{{ row.category }}</td>
+                                    <td class="p-2 border-r text-right">${{ row.budget.toLocaleString() }}</td>
+                                    <td class="p-2 border-r text-right text-red-600">${{ row.expense.toLocaleString() }}</td>
+                                    <td :class="['p-2 text-right font-bold', row.diff < 0 ? 'text-red-600' : 'text-green-600']">
+                                        {{ row.diff < 0 ? '' : '+' }}${{ row.diff.toLocaleString() }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-else class="text-center p-10 text-gray-500">正在從 IndexedDB 讀取資料...</div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const isDataLoaded = ref(false);
+                const tabs = [{ id: 'budget', name: '預算編列' }, { id: 'expense', name: '花費紀錄' }, { id: 'report', name: '結算報表' }];
+                const currentTab = ref('budget');
+                const currentMonth = ref(new Date().toISOString().slice(0, 7));
+                
+                const categories = ['餐飲', '交通', '居住', '娛樂', '購物', '醫療', '其他'];
+                const paymentMethods = ['現金', '信用卡', 'LINE Pay', '街口支付', '銀行轉帳'];
+
+                const budgets = ref([]);
+                const expenses = ref([]);
+
+                const budgetForm = ref({ category: '', paymentMethod: '', amount: '' });
+                const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', category: '', paymentMethod: '', amount: '' });
+
+                // 初始化 IndexedDB
+                localforage.config({ name: 'BudgetApp', storeName: 'finance_data' });
+
+                onMounted(async () => {
+                    // 非同步讀取資料
+                    const storedBudgets = await localforage.getItem('budgets');
+                    const storedExpenses = await localforage.getItem('expenses');
+                    if (storedBudgets) budgets.value = storedBudgets;
+                    if (storedExpenses) expenses.value = storedExpenses;
+                    isDataLoaded.value = true;
+
+                    // 設定深度監聽，資料改變時自動寫入 IndexedDB
+                    watch(budgets, (newVal) => localforage.setItem('budgets', JSON.parse(JSON.stringify(newVal))), { deep: true });
+                    watch(expenses, (newVal) => localforage.setItem('expenses', JSON.parse(JSON.stringify(newVal))), { deep: true });
+                });
+
+                const filteredBudgets = computed(() => budgets.value.filter(b => b.month === currentMonth.value));
+                const filteredExpenses = computed(() => expenses.value.filter(e => e.date.startsWith(currentMonth.value)));
+
+                const addBudget = () => {
+                    budgets.value.push({ id: Date.now(), month: currentMonth.value, ...budgetForm.value });
+                    budgetForm.value = { category: '', paymentMethod: '', amount: '' };
+                };
+
+                const addExpense = () => {
+                    expenses.value.push({ id: Date.now(), ...expenseForm.value });
+                    expenseForm.value.title = ''; expenseForm.value.amount = '';
+                };
+
+                const deleteItem = (type, id) => {
+                    if (type === 'budgets') budgets.value = budgets.value.filter(i => i.id !== id);
+                    if (type === 'expenses') expenses.value = expenses.value.filter(i => i.id !== id);
+                };
+
+                const reportByCategory = computed(() => {
+                    return categories.map(cat => {
+                        const budget = filteredBudgets.value.filter(b => b.category === cat).reduce((sum, b) => sum + b.amount, 0);
+                        const expense = filteredExpenses.value.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount, 0);
+                        return { category: cat, budget, expense, diff: budget - expense };
+                    }).filter(row => row.budget > 0 || row.expense > 0);
+                });
+
+                let chartInstance = null;
+                const renderChart = async () => {
+                    await nextTick();
+                    const ctx = document.getElementById('budgetChart');
+                    if (!ctx) return;
+                    if (chartInstance) chartInstance.destroy();
+                    const data = reportByCategory.value;
+                    chartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(d => d.category),
+                            datasets: [
+                                { label: '預算', data: data.map(d => d.budget), backgroundColor: '#3b82f6' },
+                                { label: '實際花費', data: data.map(d => d.expense), backgroundColor: '#ef4444' }
+                            ]
+                        }
+                    });
+                };
+
+                watch([currentTab, currentMonth, budgets, expenses], () => {
+                    if (currentTab.value === 'report') renderChart();
+                }, { deep: true });
+
+                // 匯出資料功能
+                const exportData = () => {
+                    const data = JSON.stringify({ budgets: budgets.value, expenses: expenses.value });
+                    const blob = new Blob([data], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `budget_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+
+                // 匯入資料功能
+                const importData = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            if (parsed.budgets) budgets.value = parsed.budgets;
+                            if (parsed.expenses) expenses.value = parsed.expenses;
+                            alert('資料匯入成功！');
+                        } catch (err) {
+                            alert('檔案格式錯誤');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
+                return {
+                    isDataLoaded, tabs, currentTab, currentMonth, categories, paymentMethods,
+                    budgetForm, expenseForm, filteredBudgets, filteredExpenses, reportByCategory,
+                    addBudget, addExpense, deleteItem, exportData, importData
+                };
+            }
+        }).mount('#app');
+    </script>
+    <style>[v-cloak] { display: none; }</style>
+</body>
+</html>
