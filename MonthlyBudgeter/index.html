@@ -14,13 +14,13 @@
 <div id="app" class="max-w-6xl mx-auto p-6" v-cloak>
     <header class="mb-8 flex justify-between items-end border-b pb-4">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">預算與記帳系統</h1>
-            <p class="text-sm text-gray-500 mt-1">Eric & Livia · IndexedDB 本機儲存</p>
+            <h1 class="text-3xl font-bold text-gray-900">夫妻理財系統</h1>
+            <p class="text-sm text-gray-500 mt-1">Eric & Livia</p>
         </div>
         <div class="flex items-end gap-6">
             <!-- 使用者切換 -->
             <div>
-                <label class="block text-sm font-medium mb-1">目前使用者</label>
+                <label class="block text-sm font-medium mb-1">使用者</label>
                 <select v-model="currentUser" class="border rounded p-2 border-gray-300">
                     <option value="Eric">Eric</option>
                     <option value="Livia">Livia</option>
@@ -31,10 +31,10 @@
             <div class="flex flex-col gap-1">
                 <button @click="exportData"
                         class="text-xs bg-gray-600 text-white px-2 py-1 rounded hover:bg-gray-700">
-                    匯出備份
+                    匯出
                 </button>
                 <label class="text-xs bg-gray-600 text-white px-2 py-1 rounded hover:bg-gray-700 cursor-pointer text-center">
-                    匯入備份
+                    匯入
                     <input type="file" @change="importData" accept=".json" class="hidden">
                 </label>
             </div>
@@ -423,8 +423,8 @@
             const isDataLoaded = ref(false);
 
             const tabs = [
-                { id: 'budget', name: '預算編列' },
                 { id: 'expense', name: '花費紀錄' },
+                { id: 'budget', name: '預算編列' },
                 { id: 'report', name: '結算報表' },
                 { id: 'savings', name: '存款歷史' }
             ];
