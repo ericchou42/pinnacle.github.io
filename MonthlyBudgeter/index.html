@@ -48,7 +48,7 @@
     </header>
 
     <!-- 導覽列 -->
-    <div class="flex space-x-2 mb-6">
+    <div class="flex flex-wrap gap-2 mb-6">
         <button v-for="t in tabs" :key="t.id" @click="currentTab = t.id"
                 :class="['px-4 py-2 rounded-t-lg font-medium',
                          currentTab === t.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300']">
@@ -61,32 +61,104 @@
 
         <!-- 1. 預算編列 -->
         <div v-show="currentTab === 'budget'">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
                 <h2 class="text-xl font-bold">
                     {{ currentMonth }} · {{ currentUser }} 的預算編列
                 </h2>
-                <div class="text-sm text-gray-500">
-                    本月目標存款（{{ currentUser }}）：$
-                    <input type="number"
-                           v-model.number="currentUserSavingsTarget"
-                           @change="saveCurrentUserSavingsTarget"
-                           class="border rounded px-2 py-1 w-28 text-right">
+                <div class="text-sm text-gray-500 flex flex-col md:items-end gap-1">
+                    <div>
+                        本月目標存款（{{ currentUser }}）：$
+                        <input type="number"
+                               v-model.number="currentUserSavingsTarget"
+                               @change="saveCurrentUserSavingsTarget"
+                               class="border rounded px-2 py-1 w-28 text-right">
+                    </div>
                 </div>
             </div>
 
+            <!-- 分類與支付方式管理 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- 分類管理 -->
+                <div class="border rounded p-3 bg-slate-50 text-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-semibold">分類管理（{{ currentUser }}）</h3>
+                    </div>
+                    <div class="flex gap-2 mb-2">
+                        <input v-model="newCategoryName"
+                               placeholder="新增分類名稱"
+                               class="border rounded px-2 py-1 flex-1">
+                        <button @click="addCategory"
+                                class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                            新增
+                        </button>
+                    </div>
+                    <ul class="space-y-1 max-h-40 overflow-auto">
+                        <li v-for="cat in userCategories" :key="cat.id"
+                            class="flex items-center justify-between gap-2">
+                            <div class="flex-1 flex items-center gap-1">
+                                <input v-model="cat.name"
+                                       @change="updateCategory(cat)"
+                                       class="border rounded px-1 py-0.5 text-xs flex-1">
+                            </div>
+                            <button @click="removeCategory(cat.id)"
+                                    class="text-red-500 text-xs hover:underline">
+                                刪除
+                            </button>
+                        </li>
+                        <li v-if="userCategories.length === 0"
+                            class="text-gray-400 text-xs">
+                            尚未設定分類，請先新增。
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 支付方式管理 -->
+                <div class="border rounded p-3 bg-slate-50 text-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-semibold">支付方式管理（{{ currentUser }}）</h3>
+                    </div>
+                    <div class="flex gap-2 mb-2">
+                        <input v-model="newPaymentName"
+                               placeholder="新增支付方式"
+                               class="border rounded px-2 py-1 flex-1">
+                        <button @click="addPaymentMethod"
+                                class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">
+                            新增
+                        </button>
+                    </div>
+                    <ul class="space-y-1 max-h-40 overflow-auto">
+                        <li v-for="pm in userPaymentMethods" :key="pm.id"
+                            class="flex items-center justify-between gap-2">
+                            <input v-model="pm.name"
+                                   @change="updatePaymentMethod(pm)"
+                                   class="border rounded px-1 py-0.5 text-xs flex-1">
+                            <button @click="removePaymentMethod(pm.id)"
+                                    class="text-red-500 text-xs hover:underline">
+                                刪除
+                            </button>
+                        </li>
+                        <li v-if="userPaymentMethods.length === 0"
+                            class="text-gray-400 text-xs">
+                            尚未設定支付方式，請先新增。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 預算表單 -->
             <form @submit.prevent="addBudget"
                   class="flex flex-wrap gap-4 mb-6 bg-blue-50 p-4 rounded">
-                <select v-model="budgetForm.category"
+                <select v-model="budgetForm.categoryId"
                         class="border p-2 rounded w-full md:w-1/4"
                         required>
                     <option value="" disabled>選擇分類</option>
-                    <option v-for="cat in categories" :value="cat">{{ cat }}</option>
+                    <option v-for="cat in userCategories" :value="cat.id">{{ cat.name }}</option>
                 </select>
-                <select v-model="budgetForm.paymentMethod"
+                <select v-model="budgetForm.paymentMethodId"
                         class="border p-2 rounded w-full md:w-1/4"
                         required>
                     <option value="" disabled>支付方式</option>
-                    <option v-for="pm in paymentMethods" :value="pm">{{ pm }}</option>
+                    <option v-for="pm in userPaymentMethods" :value="pm.id">{{ pm.name }}</option>
                 </select>
                 <input type="number" v-model.number="budgetForm.amount"
                        placeholder="預算金額"
@@ -98,7 +170,8 @@
                 </button>
             </form>
 
-            <table class="w-full text-left border-collapse">
+            <!-- 預算列表 -->
+            <table class="w-full text-left border-collapse text-sm">
                 <thead>
                 <tr class="bg-gray-100 border-b">
                     <th class="p-3">使用者</th>
@@ -112,12 +185,12 @@
                 <tr v-for="b in filteredBudgets" :key="b.id"
                     class="border-b hover:bg-gray-50">
                     <td class="p-3 text-xs text-gray-500">{{ b.user }}</td>
-                    <td class="p-3">{{ b.category }}</td>
-                    <td class="p-3 text-gray-500">{{ b.paymentMethod }}</td>
+                    <td class="p-3">{{ resolveCategoryName(b.categoryId) }}</td>
+                    <td class="p-3 text-gray-500">{{ resolvePaymentName(b.paymentMethodId) }}</td>
                     <td class="p-3 text-right font-medium">${{ b.amount.toLocaleString() }}</td>
                     <td class="p-3 text-center">
                         <button @click="deleteItem('budgets', b.id)"
-                                class="text-red-500 hover:underline text-sm">
+                                class="text-red-500 hover:underline text-xs">
                             刪除
                         </button>
                     </td>
@@ -138,7 +211,7 @@
             </h2>
 
             <form @submit.prevent="addExpense"
-                  class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 bg-green-50 p-4 rounded">
+                  class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 bg-green-50 p-4 rounded text-sm">
                 <input type="date"
                        v-model="expenseForm.date"
                        class="border p-2 rounded col-span-1"
@@ -148,17 +221,17 @@
                        placeholder="項目說明"
                        class="border p-2 rounded col-span-1"
                        required>
-                <select v-model="expenseForm.category"
+                <select v-model="expenseForm.categoryId"
                         class="border p-2 rounded col-span-1"
                         required>
                     <option value="" disabled>選擇分類</option>
-                    <option v-for="cat in categories" :value="cat">{{ cat }}</option>
+                    <option v-for="cat in userCategories" :value="cat.id">{{ cat.name }}</option>
                 </select>
-                <select v-model="expenseForm.paymentMethod"
+                <select v-model="expenseForm.paymentMethodId"
                         class="border p-2 rounded col-span-1"
                         required>
                     <option value="" disabled>支付方式</option>
-                    <option v-for="pm in paymentMethods" :value="pm">{{ pm }}</option>
+                    <option v-for="pm in userPaymentMethods" :value="pm.id">{{ pm.name }}</option>
                 </select>
                 <input type="number" v-model.number="expenseForm.amount"
                        placeholder="金額"
@@ -170,7 +243,7 @@
                 </button>
             </form>
 
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse text-sm">
                 <thead>
                 <tr class="bg-gray-100 border-b">
                     <th class="p-3">使用者</th>
@@ -190,16 +263,16 @@
                     <td class="p-3">{{ e.title }}</td>
                     <td class="p-3">
                         <span class="bg-gray-200 px-2 py-1 rounded text-xs">
-                            {{ e.category }}
+                            {{ resolveCategoryName(e.categoryId) }}
                         </span>
                     </td>
-                    <td class="p-3">{{ e.paymentMethod }}</td>
+                    <td class="p-3">{{ resolvePaymentName(e.paymentMethodId) }}</td>
                     <td class="p-3 text-right font-medium text-red-600">
                         -${{ e.amount.toLocaleString() }}
                     </td>
                     <td class="p-3 text-center">
                         <button @click="deleteItem('expenses', e.id)"
-                                class="text-red-500 hover:underline text-sm">
+                                class="text-red-500 hover:underline text-xs">
                             刪除
                         </button>
                     </td>
@@ -222,8 +295,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 <!-- 左側：分類結算表 -->
                 <div>
-                    <h3 class="font-semibold mb-2">依分類預算與實際</h3>
-                    <table class="w-full text-left border-collapse border text-sm">
+                    <h3 class="font-semibold mb-2 text-sm">依分類預算與實際</h3>
+                    <table class="w-full text-left border-collapse border text-xs md:text-sm">
                         <thead>
                         <tr class="bg-blue-50 border-b">
                             <th class="p-2 border-r">分類</th>
@@ -233,8 +306,8 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr v-for="row in reportByCategory" :key="row.category" class="border-b">
-                            <td class="p-2 border-r">{{ row.category }}</td>
+                        <tr v-for="row in reportByCategory" :key="row.categoryName" class="border-b">
+                            <td class="p-2 border-r">{{ row.categoryName }}</td>
                             <td class="p-2 border-r text-right">${{ row.budget.toLocaleString() }}</td>
                             <td class="p-2 border-r text-right text-red-600">
                                 ${{ row.expense.toLocaleString() }}
@@ -254,12 +327,12 @@
                 </div>
 
                 <!-- 右側：圖表 + 存款資訊 -->
-                <div class="space-y-6">
+                <div class="space-y-6 text-sm">
                     <div>
                         <h3 class="font-semibold mb-2">預算 vs 實際花費（分類）</h3>
                         <canvas id="budgetChart"></canvas>
                     </div>
-                    <div class="border rounded p-3 bg-gray-50 text-sm space-y-2">
+                    <div class="border rounded p-3 bg-gray-50 space-y-2">
                         <h3 class="font-semibold mb-1">本月存款計算</h3>
                         <p>
                             兩人預算總額：
@@ -274,7 +347,7 @@
                             </span>
                         </p>
                         <p>
-                            兩人合計目標存款（Eric + Livia）：
+                            兩人合計目標存款：
                             <span class="font-semibold text-blue-600">
                                 ${{ totalSavingsTargets.toLocaleString() }}
                             </span>
@@ -287,12 +360,13 @@
                             </span>
                         </p>
                         <p class="text-xs text-gray-500">
-                            建議可依照實際開支與生活狀況，手動調整下個月的目標存款。
+                            可依實際情況調整下個月個人目標存款。
                         </p>
 
                         <div class="border-t pt-2 mt-2">
-                            <h4 class="font-semibold mb-1 text-sm">
+                            <h4 class="font-semibold mb-1 text-xs">
                                 設定「下個月」各自目標存款
+                                （以目前 {{ currentMonth }} 為基準）
                             </h4>
                             <div class="flex flex-col gap-2">
                                 <div class="flex items-center gap-2">
@@ -318,6 +392,23 @@
             </div>
         </div>
 
+        <!-- 4. 存款歷史 -->
+        <div v-show="currentTab === 'savings'">
+            <h2 class="text-xl font-bold mb-4">
+                歷史每月存款目標（Eric & Livia）
+            </h2>
+            <p class="text-xs text-gray-500 mb-2">
+                依各月份目標存款紀錄繪製折線圖，方便觀察兩人存錢習慣與成長。
+            </p>
+            <div class="border rounded p-4 bg-slate-50">
+                <canvas id="savingsChart"></canvas>
+            </div>
+
+            <div class="mt-4 text-xs text-gray-500">
+                提示：此圖使用各月份兩人「目標存款」資料（若某月未設定，則由程式自動沿用前一個月）。
+            </div>
+        </div>
+
     </div>
     <div v-else class="text-center p-10 text-gray-500">
         正在從 IndexedDB 讀取資料...
@@ -334,39 +425,37 @@
             const tabs = [
                 { id: 'budget', name: '預算編列' },
                 { id: 'expense', name: '花費紀錄' },
-                { id: 'report', name: '結算報表' }
+                { id: 'report', name: '結算報表' },
+                { id: 'savings', name: '存款歷史' }
             ];
             const currentTab = ref('budget');
             const currentMonth = ref(new Date().toISOString().slice(0, 7)); // YYYY-MM
             const currentUser = ref('Eric'); // Eric / Livia
 
-            const categories = ['餐飲', '交通', '居住', '娛樂', '購物', '醫療', '其他'];
-            const paymentMethods = ['現金', '信用卡', 'LINE Pay', '街口支付', '銀行轉帳'];
+            // 動態分類 / 支付方式
+            const categories = ref([]);        // {id, user, name}
+            const paymentMethods = ref([]);    // {id, user, name}
+            const newCategoryName = ref('');
+            const newPaymentName = ref('');
 
-            const budgets = ref([]);               // {id, user, month, category, paymentMethod, amount}
-            const expenses = ref([]);              // {id, user, date, title, category, paymentMethod, amount}
-            const savingsTargets = ref([]);        // {user, month, amount} 目標存款
-            const savingsRecords = ref([]);        // {month, amount} 實際存款紀錄（如果你要之後真的記）
+            const budgets = ref([]);           // {id, user, month, categoryId, paymentMethodId, amount}
+            const expenses = ref([]);          // {id, user, date, title, categoryId, paymentMethodId, amount}
+            const savingsTargets = ref([]);    // {user, month, amount}
+            const savingsRecords = ref([]);    // 可留作未來實際存款紀錄使用
 
-            const budgetForm = ref({ category: '', paymentMethod: '', amount: null });
+            const budgetForm = ref({ categoryId: '', paymentMethodId: '', amount: null });
             const expenseForm = ref({
                 date: new Date().toISOString().slice(0, 10),
                 title: '',
-                category: '',
-                paymentMethod: '',
+                categoryId: '',
+                paymentMethodId: '',
                 amount: null
             });
 
-            // 當月、當前使用者的存款目標（雙向綁定）
             const currentUserSavingsTarget = ref(0);
+            const nextMonthSavings = ref({ Eric: 0, Livia: 0 });
 
-            // 下個月兩人的目標存款暫存
-            const nextMonthSavings = ref({
-                Eric: 0,
-                Livia: 0
-            });
-
-            // 初始化 IndexedDB
+            // IndexedDB (localforage)
             localforage.config({
                 name: 'BudgetApp',
                 storeName: 'finance_data'
@@ -377,45 +466,119 @@
                 const storedExpenses = await localforage.getItem('expenses');
                 const storedSavingsTargets = await localforage.getItem('savingsTargets');
                 const storedSavingsRecords = await localforage.getItem('savingsRecords');
+                const storedCategories = await localforage.getItem('categories');
+                const storedPaymentMethods = await localforage.getItem('paymentMethods');
 
                 if (storedBudgets) budgets.value = storedBudgets;
                 if (storedExpenses) expenses.value = storedExpenses;
                 if (storedSavingsTargets) savingsTargets.value = storedSavingsTargets;
                 if (storedSavingsRecords) savingsRecords.value = storedSavingsRecords;
+                if (storedCategories) categories.value = storedCategories;
+                if (storedPaymentMethods) paymentMethods.value = storedPaymentMethods;
 
-                // 監聽資料變動寫回 IndexedDB
+                // 初次使用時幫兩人塞一些預設分類/支付方式
+                if (categories.value.length === 0) {
+                    const seedCats = ['餐飲', '交通', '居住', '娛樂', '購物', '醫療', '其他'];
+                    let idCounter = Date.now();
+                    ['Eric', 'Livia'].forEach(user => {
+                        seedCats.forEach(name => {
+                            categories.value.push({ id: idCounter++, user, name });
+                        });
+                    });
+                }
+                if (paymentMethods.value.length === 0) {
+                    const seedPMs = ['現金', '信用卡', 'LINE Pay', '街口支付', '銀行轉帳'];
+                    let idCounter = Date.now() + 10000;
+                    ['Eric', 'Livia'].forEach(user => {
+                        seedPMs.forEach(name => {
+                            paymentMethods.value.push({ id: idCounter++, user, name });
+                        });
+                    });
+                }
+
+                // 寫回 IndexedDB 監聽
                 watch(budgets, (val) => localforage.setItem('budgets', JSON.parse(JSON.stringify(val))), { deep: true });
                 watch(expenses, (val) => localforage.setItem('expenses', JSON.parse(JSON.stringify(val))), { deep: true });
                 watch(savingsTargets, (val) => localforage.setItem('savingsTargets', JSON.parse(JSON.stringify(val))), { deep: true });
                 watch(savingsRecords, (val) => localforage.setItem('savingsRecords', JSON.parse(JSON.stringify(val))), { deep: true });
+                watch(categories, (val) => localforage.setItem('categories', JSON.parse(JSON.stringify(val))), { deep: true });
+                watch(paymentMethods, (val) => localforage.setItem('paymentMethods', JSON.parse(JSON.stringify(val))), { deep: true });
 
-                // 初始化當月存款目標
                 syncCurrentUserSavingsTarget();
                 syncNextMonthSavings();
 
                 isDataLoaded.value = true;
             });
 
-            // 依目前 user + month 找出目標存款
+            const userCategories = computed(() =>
+                categories.value.filter(c => c.user === currentUser.value)
+            );
+            const userPaymentMethods = computed(() =>
+                paymentMethods.value.filter(p => p.user === currentUser.value)
+            );
+
+            const resolveCategoryName = (id) => {
+                const c = categories.value.find(c => c.id === id);
+                return c ? c.name : '(已刪除分類)';
+            };
+            const resolvePaymentName = (id) => {
+                const p = paymentMethods.value.find(p => p.id === id);
+                return p ? p.name : '(已刪除支付方式)';
+            };
+
+            // 分類 CRUD
+            const addCategory = () => {
+                const name = (newCategoryName.value || '').trim();
+                if (!name) return;
+                categories.value.push({
+                    id: Date.now() + Math.random(),
+                    user: currentUser.value,
+                    name
+                });
+                newCategoryName.value = '';
+            };
+            const updateCategory = (cat) => {
+                // 已雙向綁定，這裡可以預留驗證
+            };
+            const removeCategory = (id) => {
+                // 若有資料引用，實務可考慮禁止刪除或給提示
+                categories.value = categories.value.filter(c => c.id !== id);
+            };
+
+            // 支付方式 CRUD
+            const addPaymentMethod = () => {
+                const name = (newPaymentName.value || '').trim();
+                if (!name) return;
+                paymentMethods.value.push({
+                    id: Date.now() + Math.random(),
+                    user: currentUser.value,
+                    name
+                });
+                newPaymentName.value = '';
+            };
+            const updatePaymentMethod = (pm) => {
+                // 雙向綁定，這裡預留驗證
+            };
+            const removePaymentMethod = (id) => {
+                paymentMethods.value = paymentMethods.value.filter(p => p.id !== id);
+            };
+
+            // 存款目標工具函式
             const findSavingsTarget = (user, month) => {
                 return savingsTargets.value.find(s => s.user === user && s.month === month);
             };
 
-            // 若該月沒有存款目標，嘗試沿用上一個月
             const getOrInheritSavingsTarget = (user, month) => {
                 const existed = findSavingsTarget(user, month);
                 if (existed) return existed.amount;
 
-                // 沒有的話，往前找最近一個月
                 const months = savingsTargets.value
                     .filter(s => s.user === user)
                     .map(s => s.month)
-                    .sort(); // 字串排序，YYYY-MM 可直接比
-
+                    .sort();
                 if (months.length === 0) return 0;
                 const prevMonths = months.filter(m => m < month);
                 if (prevMonths.length === 0) return 0;
-
                 const lastMonth = prevMonths[prevMonths.length - 1];
                 const prev = findSavingsTarget(user, lastMonth);
                 return prev ? prev.amount : 0;
@@ -424,7 +587,6 @@
             const syncCurrentUserSavingsTarget = () => {
                 const amount = getOrInheritSavingsTarget(currentUser.value, currentMonth.value);
                 currentUserSavingsTarget.value = amount;
-                // 若當月不存在記錄，寫入一筆（繼承來源）
                 if (!findSavingsTarget(currentUser.value, currentMonth.value) && amount > 0) {
                     savingsTargets.value.push({
                         user: currentUser.value,
@@ -434,19 +596,9 @@
                 }
             };
 
-            // 同步「下個月」暫存的目標金額（預設沿用當月）
-            const syncNextMonthSavings = () => {
-                const ym = currentMonth.value;
-                const nextYm = computeNextMonth(ym);
-                nextMonthSavings.value.Eric = getOrInheritSavingsTarget('Eric', nextYm);
-                nextMonthSavings.value.Livia = getOrInheritSavingsTarget('Livia', nextYm);
-            };
-
-            // 計算下個月 YYYY-MM
             const computeNextMonth = (ym) => {
                 const [y, m] = ym.split('-').map(Number);
-                let ny = y;
-                let nm = m + 1;
+                let ny = y, nm = m + 1;
                 if (nm === 13) {
                     nm = 1;
                     ny += 1;
@@ -454,7 +606,12 @@
                 return `${ny}-${String(nm).padStart(2, '0')}`;
             };
 
-            // 改變月份或使用者時，同步存款目標
+            const syncNextMonthSavings = () => {
+                const nextYm = computeNextMonth(currentMonth.value);
+                nextMonthSavings.value.Eric = getOrInheritSavingsTarget('Eric', nextYm);
+                nextMonthSavings.value.Livia = getOrInheritSavingsTarget('Livia', nextYm);
+            };
+
             watch([currentMonth, currentUser], () => {
                 syncCurrentUserSavingsTarget();
                 syncNextMonthSavings();
@@ -463,31 +620,30 @@
             const filteredBudgets = computed(() =>
                 budgets.value.filter(b => b.month === currentMonth.value && b.user === currentUser.value)
             );
-
             const filteredExpenses = computed(() =>
                 expenses.value.filter(e => e.date.startsWith(currentMonth.value) && e.user === currentUser.value)
             );
 
             const addBudget = () => {
                 budgets.value.push({
-                    id: Date.now(),
+                    id: Date.now() + Math.random(),
                     user: currentUser.value,
                     month: currentMonth.value,
-                    category: budgetForm.value.category,
-                    paymentMethod: budgetForm.value.paymentMethod,
+                    categoryId: budgetForm.value.categoryId,
+                    paymentMethodId: budgetForm.value.paymentMethodId,
                     amount: Number(budgetForm.value.amount) || 0
                 });
-                budgetForm.value = { category: '', paymentMethod: '', amount: null };
+                budgetForm.value = { categoryId: '', paymentMethodId: '', amount: null };
             };
 
             const addExpense = () => {
                 expenses.value.push({
-                    id: Date.now(),
+                    id: Date.now() + Math.random(),
                     user: currentUser.value,
                     date: expenseForm.value.date,
                     title: expenseForm.value.title,
-                    category: expenseForm.value.category,
-                    paymentMethod: expenseForm.value.paymentMethod,
+                    categoryId: expenseForm.value.categoryId,
+                    paymentMethodId: expenseForm.value.paymentMethodId,
                     amount: Number(expenseForm.value.amount) || 0
                 });
                 expenseForm.value.title = '';
@@ -502,7 +658,6 @@
                 }
             };
 
-            // 儲存目前 user + month 的目標存款
             const saveCurrentUserSavingsTarget = () => {
                 const amt = Number(currentUserSavingsTarget.value) || 0;
                 let target = findSavingsTarget(currentUser.value, currentMonth.value);
@@ -517,16 +672,22 @@
                 }
             };
 
-            // 依分類彙總（兩人合併）
             const reportByCategory = computed(() => {
-                return categories.map(cat => {
+                // 所有分類 ID（避免刪除後資料遺失）
+                const catIds = new Set([
+                    ...budgets.value.filter(b => b.month === currentMonth.value).map(b => b.categoryId),
+                    ...expenses.value.filter(e => e.date.startsWith(currentMonth.value)).map(e => e.categoryId)
+                ]);
+
+                return Array.from(catIds).map(cid => {
+                    const categoryName = resolveCategoryName(cid);
                     const budget = budgets.value
-                        .filter(b => b.month === currentMonth.value && b.category === cat)
+                        .filter(b => b.month === currentMonth.value && b.categoryId === cid)
                         .reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
                     const expense = expenses.value
-                        .filter(e => e.date.startsWith(currentMonth.value) && e.category === cat)
+                        .filter(e => e.date.startsWith(currentMonth.value) && e.categoryId === cid)
                         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-                    return { category: cat, budget, expense, diff: budget - expense };
+                    return { categoryId: cid, categoryName, budget, expense, diff: budget - expense };
                 }).filter(row => row.budget > 0 || row.expense > 0);
             });
 
@@ -542,19 +703,16 @@
                     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
             );
 
-            // 兩人目標存款合計
             const totalSavingsTargets = computed(() => {
                 const eric = getOrInheritSavingsTarget('Eric', currentMonth.value) || 0;
                 const livia = getOrInheritSavingsTarget('Livia', currentMonth.value) || 0;
                 return eric + livia;
             });
 
-            // 以「預算 - 開支」估算可存金額（兩人合併）
-            const estimatedSavingsAll = computed(() => {
-                return totalBudgetAll.value - totalExpenseAll.value;
-            });
+            const estimatedSavingsAll = computed(() =>
+                totalBudgetAll.value - totalExpenseAll.value
+            );
 
-            // 套用下個月目標存款
             const applyNextMonthSavings = () => {
                 const nextYm = computeNextMonth(currentMonth.value);
                 ['Eric', 'Livia'].forEach(user => {
@@ -569,19 +727,19 @@
                 alert(`已設定 ${nextYm} 的目標存款。`);
             };
 
-            // 圖表
-            let chartInstance = null;
-            const renderChart = async () => {
+            // 圖表 - 分類
+            let budgetChartInstance = null;
+            const renderBudgetChart = async () => {
                 await nextTick();
                 const ctx = document.getElementById('budgetChart');
                 if (!ctx) return;
-                if (chartInstance) chartInstance.destroy();
+                if (budgetChartInstance) budgetChartInstance.destroy();
 
                 const data = reportByCategory.value;
-                chartInstance = new Chart(ctx, {
+                budgetChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: data.map(d => d.category),
+                        labels: data.map(d => d.categoryName),
                         datasets: [
                             {
                                 label: '預算總額',
@@ -606,9 +764,74 @@
 
             watch([currentTab, currentMonth, budgets, expenses], () => {
                 if (currentTab.value === 'report') {
-                    renderChart();
+                    renderBudgetChart();
+                }
+                if (currentTab.value === 'savings') {
+                    renderSavingsChart();
                 }
             }, { deep: true });
+
+            // 取得所有有設定目標的月份（排序）
+            const allMonths = computed(() => {
+                const mset = new Set(savingsTargets.value.map(s => s.month));
+                return Array.from(mset).sort();
+            });
+
+            const savingsHistoryData = computed(() => {
+                const labels = allMonths.value;
+                const ericData = labels.map(m => getOrInheritSavingsTarget('Eric', m) || 0);
+                const liviaData = labels.map(m => getOrInheritSavingsTarget('Livia', m) || 0);
+                const totalData = labels.map((m, idx) => ericData[idx] + liviaData[idx]);
+                return { labels, ericData, liviaData, totalData };
+            });
+
+            // 圖表 - 存款歷史折線圖
+            let savingsChartInstance = null;
+            const renderSavingsChart = async () => {
+                await nextTick();
+                const ctx = document.getElementById('savingsChart');
+                if (!ctx) return;
+                if (savingsChartInstance) savingsChartInstance.destroy();
+
+                const sh = savingsHistoryData.value;
+                if (sh.labels.length === 0) return;
+
+                savingsChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sh.labels,
+                        datasets: [
+                            {
+                                label: 'Eric 目標存款',
+                                data: sh.ericData,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59,130,246,0.1)',
+                                tension: 0.2
+                            },
+                            {
+                                label: 'Livia 目標存款',
+                                data: sh.liviaData,
+                                borderColor: '#ec4899',
+                                backgroundColor: 'rgba(236,72,153,0.1)',
+                                tension: 0.2
+                            },
+                            {
+                                label: '兩人合計',
+                                data: sh.totalData,
+                                borderColor: '#22c55e',
+                                backgroundColor: 'rgba(34,197,94,0.1)',
+                                tension: 0.2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            };
 
             // 匯出 / 匯入
             const exportData = () => {
@@ -616,7 +839,9 @@
                     budgets: budgets.value,
                     expenses: expenses.value,
                     savingsTargets: savingsTargets.value,
-                    savingsRecords: savingsRecords.value
+                    savingsRecords: savingsRecords.value,
+                    categories: categories.value,
+                    paymentMethods: paymentMethods.value
                 });
                 const blob = new Blob([data], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -638,6 +863,8 @@
                         if (parsed.expenses) expenses.value = parsed.expenses;
                         if (parsed.savingsTargets) savingsTargets.value = parsed.savingsTargets;
                         if (parsed.savingsRecords) savingsRecords.value = parsed.savingsRecords;
+                        if (parsed.categories) categories.value = parsed.categories;
+                        if (parsed.paymentMethods) paymentMethods.value = parsed.paymentMethods;
                         syncCurrentUserSavingsTarget();
                         syncNextMonthSavings();
                         alert('資料匯入成功！');
@@ -654,12 +881,22 @@
                 currentTab,
                 currentMonth,
                 currentUser,
+                // 動態清單
                 categories,
                 paymentMethods,
-                budgets,
-                expenses,
+                userCategories,
+                userPaymentMethods,
+                newCategoryName,
+                newPaymentName,
+                // 表單
                 budgetForm,
                 expenseForm,
+                // 資料
+                budgets,
+                expenses,
+                savingsTargets,
+                savingsRecords,
+                // 計算
                 filteredBudgets,
                 filteredExpenses,
                 reportByCategory,
@@ -669,6 +906,16 @@
                 estimatedSavingsAll,
                 currentUserSavingsTarget,
                 nextMonthSavings,
+                savingsHistoryData,
+                // 方法
+                resolveCategoryName,
+                resolvePaymentName,
+                addCategory,
+                updateCategory,
+                removeCategory,
+                addPaymentMethod,
+                updatePaymentMethod,
+                removePaymentMethod,
                 addBudget,
                 addExpense,
                 deleteItem,
