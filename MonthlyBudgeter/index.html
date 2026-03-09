@@ -11,6 +11,8 @@
         [v-cloak] { display: none; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         input:focus, select:focus { border-color: #3b82f6; ring: 0; outline: none; }
+        /* 隱藏月份選擇器的邊框與背景，使其更融入標題 */
+        .month-picker { background: transparent; border: none; font-weight: 800; color: #1e293b; padding: 0; width: 140px; cursor: pointer; }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800 antialiased">
@@ -20,20 +22,22 @@
         Syncing...
     </div>
 
-    <header class="bg-white p-4 shadow-sm mb-4">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h1 class="text-xl font-bold text-gray-900">{{ currentUser }}'s Finance</h1>
-                <p class="text-[10px] text-gray-400 font-mono">Auto-Switch: {{ currentUser }}</p>
+    <header class="bg-white p-5 shadow-sm mb-4 border-b border-gray-100">
+        <div class="flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-blue-500 font-black uppercase tracking-widest">Finance Center</span>
+                <div class="flex items-center gap-1">
+                    <input type="month" v-model="currentMonth" class="month-picker text-xl">
+                </div>
             </div>
-            <div class="flex items-center gap-2 bg-gray-100 p-2 rounded-xl text-sm font-bold text-blue-600">
-                {{ currentMonth.split('-')[0] }} / {{ currentMonth.split('-')[1] }}
+            <div class="text-right">
+                <span class="text-lg font-bold text-gray-900">{{ currentUser }}</span>
+                <p class="text-[9px] text-gray-400">Personal Account</p>
             </div>
         </div>
-        <input type="month" v-model="currentMonth" class="w-full bg-slate-50 border-none rounded-xl text-sm p-2 text-center text-gray-500">
     </header>
 
-    <nav class="flex justify-around bg-white rounded-xl shadow-sm mx-4 mb-4 p-1 sticky top-2 z-40">
+    <nav class="flex justify-around bg-white rounded-2xl shadow-sm mx-4 mb-4 p-1 sticky top-2 z-40">
         <button v-for="t in tabs" :key="t.id" @click="currentTab = t.id"
                 :class="['flex-1 py-2 text-xs transition-all', currentTab === t.id ? 'tab-active' : 'text-gray-400']">
             {{ t.name }}
@@ -44,41 +48,44 @@
         
         <div v-show="currentTab === 'expense'" class="space-y-4">
             <section class="bg-white p-4 rounded-2xl shadow-sm border-t-4 border-blue-500">
-                <div class="flex justify-between items-center mb-3 text-xs font-bold text-gray-400">
-                    <span>📝 快速記帳</span>
-                    <div class="flex bg-gray-100 rounded-lg p-1">
-                        <button @click="expenseForm.scope = 'common'" :class="['px-3 py-1 rounded-md transition-all', expenseForm.scope === 'common' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400']">共同</button>
-                        <button @click="expenseForm.scope = 'personal'" :class="['px-3 py-1 rounded-md transition-all', expenseForm.scope === 'personal' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-400']">個人</button>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-tighter">New Expense</h3>
+                    <div class="flex bg-slate-100 rounded-lg p-1 text-[10px]">
+                        <button @click="expenseForm.scope = 'common'" :class="['px-4 py-1.5 rounded-md transition-all', expenseForm.scope === 'common' ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-400']">共同</button>
+                        <button @click="expenseForm.scope = 'personal'" :class="['px-4 py-1.5 rounded-md transition-all', expenseForm.scope === 'personal' ? 'bg-white shadow-sm text-purple-600 font-bold' : 'text-gray-400']">個人</button>
                     </div>
                 </div>
                 <form @submit.prevent="addExpense" class="grid grid-cols-2 gap-3">
-                    <input type="date" v-model="expenseForm.date" class="col-span-2 border rounded-xl p-3 text-sm bg-gray-50" required>
-                    <input type="text" v-model="expenseForm.title" placeholder="買了什麼？" class="col-span-2 border rounded-xl p-3 text-sm" required>
-                    <select v-model="expenseForm.categoryId" class="border rounded-xl p-3 text-sm bg-gray-50" required>
+                    <input type="date" v-model="expenseForm.date" class="col-span-2 border rounded-xl p-3 text-sm bg-gray-50/50" required>
+                    <input type="text" v-model="expenseForm.title" placeholder="項目說明" class="col-span-2 border rounded-xl p-3 text-sm" required>
+                    <select v-model="expenseForm.categoryId" class="border rounded-xl p-3 text-sm bg-gray-50/50" required>
                         <option value="" disabled>分類</option>
                         <option v-for="cat in userCategories" :value="cat.id">{{ cat.name }}</option>
                     </select>
-                    <select v-model="expenseForm.paymentMethodId" class="border rounded-xl p-3 text-sm bg-gray-50" required>
+                    <select v-model="expenseForm.paymentMethodId" class="border rounded-xl p-3 text-sm bg-gray-50/50" required>
                         <option value="" disabled>支付</option>
                         <option v-for="pm in userPaymentMethods" :value="pm.id">{{ pm.name }}</option>
                     </select>
-                    <input type="number" v-model.number="expenseForm.amount" placeholder="輸入金額" class="col-span-2 border rounded-xl p-3 text-xl font-bold text-blue-600 bg-blue-50/20" required>
-                    <button type="submit" class="col-span-2 bg-slate-900 text-white font-bold py-3 rounded-xl active:scale-95 transition-all">新增紀錄</button>
+                    <div class="col-span-2 relative">
+                        <span class="absolute left-4 top-3.5 text-blue-300 font-bold">$</span>
+                        <input type="number" v-model.number="expenseForm.amount" placeholder="0" class="w-full border rounded-xl p-3 pl-8 text-2xl font-black text-blue-600 bg-blue-50/20" required>
+                    </div>
+                    <button type="submit" class="col-span-2 bg-slate-900 text-white font-bold py-3.5 rounded-xl active:scale-95 transition-all shadow-lg">新增紀錄</button>
                 </form>
             </section>
 
-            <div class="divide-y bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div v-for="e in filteredExpenses.slice().reverse()" :key="e.id" class="p-4 flex justify-between items-center">
-                    <div>
-                        <div class="flex items-center gap-1">
-                            <span :class="['text-[8px] px-1 rounded', e.scope === 'common' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600']">{{ e.scope === 'common' ? '共' : '個' }}</span>
-                            <span class="font-bold text-sm">{{ e.title }}</span>
+            <div class="divide-y bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+                <div v-for="e in filteredExpenses.slice().reverse()" :key="e.id" class="p-4 flex justify-between items-center active:bg-slate-50">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span :class="['text-[8px] px-1.5 py-0.5 rounded font-bold uppercase', e.scope === 'common' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600']">{{ e.scope === 'common' ? '共' : '個' }}</span>
+                            <span class="font-bold text-sm text-slate-700">{{ e.title }}</span>
                         </div>
-                        <p class="text-[10px] text-gray-400">{{ resolveCategoryName(e.categoryId) }} · {{ e.date.split('-')[2] }}日</p>
+                        <p class="text-[10px] text-gray-400 font-medium">{{ e.date.split('-')[2] }}日 · {{ resolveCategoryName(e.categoryId) }}</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="font-black text-red-500">-${{ e.amount.toLocaleString() }}</span>
-                        <button @click="deleteItem('expenses', e.id)" class="text-gray-300">✕</button>
+                    <div class="flex items-center gap-4">
+                        <span class="font-black text-slate-700">${{ e.amount.toLocaleString() }}</span>
+                        <button @click="deleteItem('expenses', e.id)" class="text-gray-200 hover:text-red-400">✕</button>
                     </div>
                 </div>
             </div>
@@ -86,102 +93,116 @@
 
         <div v-show="currentTab === 'budget'" class="space-y-4">
             <section class="bg-white p-4 rounded-2xl shadow-sm border-t-4 border-purple-500">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-xs font-bold text-gray-400">💰 預算設定</span>
-                    <select v-model="budgetForm.scope" class="text-xs bg-gray-100 p-1 rounded-md">
-                        <option value="common">共同預算</option>
-                        <option value="personal">個人預算</option>
-                    </select>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-tighter">Budget Plan</h3>
+                    <div class="flex bg-slate-100 rounded-lg p-1 text-[10px]">
+                        <button @click="budgetForm.scope = 'common'" :class="['px-4 py-1.5 rounded-md transition-all', budgetForm.scope === 'common' ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-400']">共同</button>
+                        <button @click="budgetForm.scope = 'personal'" :class="['px-4 py-1.5 rounded-md transition-all', budgetForm.scope === 'personal' ? 'bg-white shadow-sm text-purple-600 font-bold' : 'text-gray-400']">個人</button>
+                    </div>
                 </div>
-                <form @submit.prevent="addBudget" class="space-y-2">
-                    <select v-model="budgetForm.categoryId" class="w-full border rounded-xl p-3 text-sm" required>
-                        <option value="" disabled>選擇分類</option>
+                <form @submit.prevent="addBudget" class="space-y-3">
+                    <select v-model="budgetForm.categoryId" class="w-full border rounded-xl p-3 text-sm bg-gray-50/50" required>
+                        <option value="" disabled>選擇預算分類</option>
                         <option v-for="cat in userCategories" :value="cat.id">{{ cat.name }}</option>
                     </select>
-                    <input type="number" v-model.number="budgetForm.amount" placeholder="預算金額" class="w-full border rounded-xl p-3 text-lg font-bold" required>
-                    <button type="submit" class="w-full bg-purple-600 text-white font-bold py-3 rounded-xl">加入預算</button>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3 text-purple-300 font-bold">$</span>
+                        <input type="number" v-model.number="budgetForm.amount" placeholder="0" class="w-full border rounded-xl p-3 pl-8 text-xl font-black text-purple-600 bg-purple-50/10" required min="1">
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 text-white font-bold py-3.5 rounded-xl shadow-md">加入預算清單</button>
                 </form>
             </section>
 
             <div class="bg-white rounded-2xl shadow-sm divide-y">
-                <div v-for="b in filteredBudgets" :key="b.id" class="p-4 flex justify-between items-center text-sm">
-                    <span class="text-gray-600">{{ b.scope === 'common' ? '🏢' : '👤' }} {{ resolveCategoryName(b.categoryId) }}</span>
-                    <div class="flex items-center gap-3 font-bold">
-                        <span>${{ b.amount.toLocaleString() }}</span>
-                        <button @click="deleteItem('budgets', b.id)" class="text-gray-300">✕</button>
+                <div v-for="b in filteredBudgets" :key="b.id" class="p-4 flex justify-between items-center">
+                    <div class="flex items-center gap-2 text-sm">
+                        <span :class="['text-[8px] px-1.5 py-0.5 rounded font-bold', b.scope === 'common' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600']">{{ b.scope === 'common' ? '共同' : '個人' }}</span>
+                        <span class="font-medium text-slate-600">{{ resolveCategoryName(b.categoryId) }}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-black text-slate-800">${{ b.amount.toLocaleString() }}</span>
+                        <button @click="deleteItem('budgets', b.id)" class="text-gray-200">✕</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div v-show="currentTab === 'report'" class="space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm">
-                <h3 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">Category Analysis</h3>
-                <div class="space-y-4">
-                    <div v-for="row in reportDetails" :key="row.id" class="space-y-1">
-                        <div class="flex justify-between text-xs font-bold">
-                            <span>{{ row.name }}</span>
-                            <span :class="row.diff < 0 ? 'text-red-500' : 'text-green-600'">
-                                {{ row.diff < 0 ? '超支' : '結餘' }} ${{ Math.abs(row.diff).toLocaleString() }}
+            <div class="bg-white p-5 rounded-2xl shadow-sm">
+                <h3 class="text-[10px] font-black text-gray-400 mb-6 uppercase tracking-widest">Detail Analysis</h3>
+                <div class="space-y-6">
+                    <div v-for="row in reportDetails" :key="row.id" class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-sm font-bold text-slate-700">{{ row.name }}</span>
+                            <span :class="['text-[11px] font-black', row.diff < 0 ? 'text-red-500' : 'text-emerald-500']">
+                                {{ row.diff < 0 ? '▼ 透支' : '▲ 結餘' }} ${{ Math.abs(row.diff).toLocaleString() }}
                             </span>
                         </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
-                            <div :style="{ width: row.percent + '%' }" :class="['h-full transition-all', row.percent > 100 ? 'bg-red-500' : 'bg-blue-500']"></div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+                            <div :style="{ width: Math.min(row.percent, 100) + '%' }" :class="['h-full transition-all duration-700', row.percent > 100 ? 'bg-red-500' : 'bg-blue-500']"></div>
                         </div>
-                        <div class="flex justify-between text-[10px] text-gray-400">
+                        <div class="flex justify-between text-[9px] font-bold text-gray-400">
                             <span>實際: ${{ row.expense.toLocaleString() }}</span>
                             <span>預算: ${{ row.budget.toLocaleString() }}</span>
                         </div>
                     </div>
+                    <div v-if="reportDetails.length === 0" class="py-10 text-center text-gray-300 text-xs">目前尚無預算或支出資料</div>
                 </div>
             </div>
         </div>
 
         <div v-show="currentTab === 'savings'" class="space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border-t-4 border-yellow-500">
-                <h3 class="text-xs font-bold text-gray-400 mb-4 uppercase">Saving Targets</h3>
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400">🏢 共同存款目標</label>
-                        <input type="number" v-model.number="currentSavingsTarget.common" @change="saveSavings" class="w-full border-b py-2 font-bold text-lg outline-none">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-t-4 border-amber-400">
+                <h3 class="text-[10px] font-black text-gray-400 mb-5 uppercase">Saving Missions</h3>
+                <div class="space-y-5">
+                    <div class="group">
+                        <label class="text-[10px] font-black text-blue-500 uppercase">🏢 共同存款目標</label>
+                        <div class="relative">
+                            <span class="absolute left-0 bottom-2 text-gray-300 font-bold">$</span>
+                            <input type="number" v-model.number="currentSavingsTarget.common" @change="saveSavings" class="w-full border-b border-slate-100 py-2 pl-4 font-black text-2xl outline-none focus:border-blue-500 transition-colors">
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400">👤 個人存款目標 ({{ currentUser }})</label>
-                        <input type="number" v-model.number="currentSavingsTarget.personal" @change="saveSavings" class="w-full border-b py-2 font-bold text-lg outline-none">
+                    <div class="group">
+                        <label class="text-[10px] font-black text-purple-500 uppercase">👤 個人存款目標 ({{ currentUser }})</label>
+                        <div class="relative">
+                            <span class="absolute left-0 bottom-2 text-gray-300 font-bold">$</span>
+                            <input type="number" v-model.number="currentSavingsTarget.personal" @change="saveSavings" class="w-full border-b border-slate-100 py-2 pl-4 font-black text-2xl outline-none focus:border-purple-500 transition-colors">
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="bg-slate-900 text-white p-6 rounded-3xl">
-                <p class="text-[10px] opacity-60">本月兩人合計目標</p>
-                <h2 class="text-3xl font-black mt-1">${{ (currentSavingsTarget.common + currentSavingsTarget.personal).toLocaleString() }}</h2>
+            <div class="bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/5 rounded-full"></div>
+                <p class="text-[10px] opacity-50 font-bold uppercase tracking-widest">Monthly Total Target</p>
+                <h2 class="text-4xl font-black mt-2 tracking-tight">${{ (currentSavingsTarget.common + currentSavingsTarget.personal).toLocaleString() }}</h2>
             </div>
         </div>
 
         <div v-show="currentTab === 'setting'" class="space-y-6">
-            <section class="bg-white p-4 rounded-2xl shadow-sm">
-                <h3 class="font-bold text-sm mb-3">🏷️ 分類管理 ({{ currentUser }})</h3>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" v-model="newItemName.cat" placeholder="新分類名稱" class="flex-1 border rounded-xl px-3 py-2 text-sm">
-                    <button @click="addItem('cat')" class="bg-blue-600 text-white px-4 rounded-xl text-sm">新增</button>
+            <section class="bg-white p-5 rounded-2xl shadow-sm">
+                <h3 class="font-black text-xs text-gray-400 uppercase mb-4 tracking-widest">🏷️ Categories</h3>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" v-model="newItemName.cat" placeholder="新分類" class="flex-1 border rounded-xl px-4 py-3 text-sm bg-gray-50/50">
+                    <button @click="addItem('cat')" class="bg-blue-600 text-white px-6 rounded-xl text-sm font-bold shadow-md">新增</button>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <div v-for="cat in userCategories" :key="cat.id" class="bg-gray-100 px-3 py-1 rounded-full text-xs flex items-center gap-2">
-                        <span>{{ cat.name }}</span>
-                        <button @click="removeItem('cat', cat.id)" class="text-gray-400">×</button>
+                    <div v-for="cat in userCategories" :key="cat.id" class="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-xs flex items-center gap-3">
+                        <span class="font-bold text-slate-600">{{ cat.name }}</span>
+                        <button @click="removeItem('cat', cat.id)" class="text-slate-300 hover:text-red-500">✕</button>
                     </div>
                 </div>
             </section>
 
-            <section class="bg-white p-4 rounded-2xl shadow-sm">
-                <h3 class="font-bold text-sm mb-3">💳 支付方式 ({{ currentUser }})</h3>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" v-model="newItemName.pm" placeholder="新支付方式" class="flex-1 border rounded-xl px-3 py-2 text-sm">
-                    <button @click="addItem('pm')" class="bg-blue-600 text-white px-4 rounded-xl text-sm">新增</button>
+            <section class="bg-white p-5 rounded-2xl shadow-sm">
+                <h3 class="font-black text-xs text-gray-400 uppercase mb-4 tracking-widest">💳 Payment</h3>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" v-model="newItemName.pm" placeholder="新方式" class="flex-1 border rounded-xl px-4 py-3 text-sm bg-gray-50/50">
+                    <button @click="addItem('pm')" class="bg-blue-600 text-white px-6 rounded-xl text-sm font-bold shadow-md">新增</button>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <div v-for="pm in userPaymentMethods" :key="pm.id" class="bg-gray-100 px-3 py-1 rounded-full text-xs flex items-center gap-2">
-                        <span>{{ pm.name }}</span>
-                        <button @click="removeItem('pm', pm.id)" class="text-gray-400">×</button>
+                    <div v-for="pm in userPaymentMethods" :key="pm.id" class="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-xs flex items-center gap-3">
+                        <span class="font-bold text-slate-600">{{ pm.name }}</span>
+                        <button @click="removeItem('pm', pm.id)" class="text-slate-300 hover:text-red-500">✕</button>
                     </div>
                 </div>
             </section>
@@ -190,13 +211,17 @@
     </main>
 
     <div v-if="!isDataLoaded" class="fixed inset-0 bg-white flex items-center justify-center z-[100]">
-        <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div class="flex flex-col items-center">
+            <div class="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">Syncing Vault</p>
+        </div>
     </div>
 </div>
 
 <script>
     const { createApp, ref, computed, watch, onMounted } = Vue;
-    const GAS_URL = 'YOUR_GAS_URL'; 
+    // === 貼上你的 GAS URL ===
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyKggQrPg724DrYAiXVB5a5N-5GNYWU0YNZpuceyZyo7cvSxpjCu7iW7iZE7mEedC19/exec'; 
 
     createApp({
         setup() {
@@ -205,7 +230,6 @@
             const currentTab = ref('expense');
             const currentMonth = ref(new Date().toISOString().slice(0, 7));
             
-            // 2. 從網址取得使用者
             const urlParams = new URLSearchParams(window.location.search);
             const currentUser = ref(urlParams.get('user') || 'Eric');
 
@@ -221,13 +245,12 @@
             const expenses = ref([]);
             const categories = ref([]);
             const paymentMethods = ref([]);
-            const savingsTargets = ref([]); // { month, common, personal_Eric, personal_Livia }
+            const savingsTargets = ref([]);
 
             const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', categoryId: '', paymentMethodId: '', amount: null, scope: 'common' });
             const budgetForm = ref({ categoryId: '', amount: null, scope: 'common' });
             const newItemName = ref({ cat: '', pm: '' });
 
-            // 讀取資料
             const loadData = async () => {
                 try {
                     const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load' }) });
@@ -267,7 +290,6 @@
 
             onMounted(loadData);
 
-            // 計算屬性
             const userCategories = computed(() => categories.value.filter(c => c.user === currentUser.value));
             const userPaymentMethods = computed(() => paymentMethods.value.filter(p => p.user === currentUser.value));
             const filteredBudgets = computed(() => budgets.value.filter(b => b.month === currentMonth.value && b.user === currentUser.value));
@@ -281,25 +303,16 @@
                 };
             });
 
-            // 報表邏輯
             const reportDetails = computed(() => {
                 return userCategories.value.map(cat => {
                     const budget = filteredBudgets.value.filter(b => b.categoryId === cat.id).reduce((s,b)=>s+b.amount, 0);
                     const expense = filteredExpenses.value.filter(e => e.categoryId === cat.id).reduce((s,e)=>s+e.amount, 0);
-                    return {
-                        id: cat.id,
-                        name: cat.name,
-                        budget,
-                        expense,
-                        diff: budget - expense,
-                        percent: budget > 0 ? (expense / budget) * 100 : (expense > 0 ? 100 : 0)
-                    };
+                    return { id: cat.id, name: cat.name, budget, expense, diff: budget - expense, percent: budget > 0 ? (expense / budget) * 100 : (expense > 0 ? 100 : 0) };
                 }).filter(row => row.budget > 0 || row.expense > 0);
             });
 
             const resolveCategoryName = (id) => categories.value.find(c => c.id === id)?.name || '未分類';
 
-            // 方法
             const addExpense = () => {
                 expenses.value.push({ ...expenseForm.value, id: Date.now(), user: currentUser.value });
                 expenseForm.value.title = ''; expenseForm.value.amount = null;
