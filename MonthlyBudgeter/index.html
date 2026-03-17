@@ -11,7 +11,6 @@
         [v-cloak] { display: none; }
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: 900; }
         input:focus, select:focus { border-color: #3b82f6; ring: 0; outline: none; }
-        .ios-bg { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .group-header { position: sticky; top: 110px; z-index: 30; background: #f8fafc; padding: 8px 16px; font-size: 0.75rem; font-weight: 800; color: #64748b; }
     </style>
 </head>
@@ -23,16 +22,16 @@
             <div class="text-center text-white mb-10">
                 <h1 class="text-4xl font-black tracking-tighter italic">FINANCE</h1>
                 <p class="text-blue-400 text-xs tracking-[0.5em] uppercase mt-2">Access Control</p>
+                <p v-if="loginError" class="text-red-400 text-xs mt-4">密碼錯誤，請重新輸入</p>
             </div>
             <div class="space-y-4">
-                <div class="relative">
-                    <input type="password" v-model="loginPwd" placeholder="請輸入通行密碼" class="w-full bg-slate-800 border-none rounded-2xl p-5 text-white text-center text-xl placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 transition-all">
-                </div>
-                <button @click="handleLogin" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-2xl transition-all active:scale-95">
+                <input type="password" v-model="loginPwd" placeholder="請輸入通行密碼" @keyup.enter="handleLogin" 
+                       class="w-full bg-slate-800 border-none rounded-2xl p-5 text-white text-center text-xl focus:ring-2 focus:ring-blue-500 transition-all">
+                <button @click="handleLogin" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all">
                     進入系統
                 </button>
-                <div v-if="isDataLoaded" @click="changePassword" class="text-center text-slate-500 text-xs mt-4 underline">修改密碼</div>
             </div>
+            <div v-if="!isDataLoaded" class="text-center text-slate-600 text-[10px] animate-pulse">正在載入雲端配置...</div>
         </div>
     </div>
 
@@ -98,7 +97,7 @@
                                     <div :class="['w-1 h-8 rounded-full', e.scope === 'common' ? 'bg-blue-500' : 'bg-purple-500']"></div>
                                     <div>
                                         <p class="font-bold text-slate-700 text-sm">{{ e.title }}</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase">{{ resolveCategoryName(e.categoryId) }} · {{ resolvePaymentName(e.paymentMethodId) }}</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">{{ resolveCategoryName(e.categoryId) }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4">
@@ -122,19 +121,16 @@
                     </div>
                     <form @submit.prevent="addBudget" class="space-y-3">
                         <select v-model="budgetForm.categoryId" class="w-full border rounded-2xl p-4 text-sm bg-slate-50" required>
-                            <option value="" disabled>選擇預算項目</option>
+                            <option value="" disabled>選擇項目</option>
                             <option v-for="cat in userCategories" :value="cat.id">{{ cat.name }}</option>
                         </select>
-                        <input type="number" v-model.number="budgetForm.amount" placeholder="預算金額" class="w-full border rounded-2xl p-4 text-2xl font-black text-purple-600 bg-purple-50/20" required>
+                        <input type="number" v-model.number="budgetForm.amount" placeholder="預算金額" class="w-full border rounded-2xl p-4 text-2xl font-black text-purple-600 bg-purple-50/10" required>
                         <button type="submit" class="w-full bg-purple-600 text-white font-black py-5 rounded-2xl">加入預算</button>
                     </form>
                 </section>
                 <div class="bg-white rounded-2xl shadow-sm divide-y">
                     <div v-for="b in filteredBudgets" :key="b.id" class="p-4 flex justify-between items-center">
-                        <span class="text-sm font-bold text-slate-600 flex items-center gap-2">
-                            <span :class="['w-2 h-2 rounded-full', b.scope === 'common' ? 'bg-blue-500' : 'bg-purple-500']"></span>
-                            {{ resolveCategoryName(b.categoryId) }}
-                        </span>
+                        <span class="text-sm font-bold text-slate-600">{{ b.scope === 'common' ? '🏢' : '👤' }} {{ resolveCategoryName(b.categoryId) }}</span>
                         <div class="flex items-center gap-4">
                             <span class="font-black text-slate-800">${{ b.amount.toLocaleString() }}</span>
                             <button @click="deleteItem('budgets', b.id)" class="text-slate-200">✕</button>
@@ -145,35 +141,29 @@
 
             <div v-show="currentTab === 'report'" class="space-y-6">
                 <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-8 border-blue-500">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black text-slate-800">🏢 共同支出分析</h3>
-                        <span class="text-blue-600 font-black">${{ scopedExpense('common').toLocaleString() }}</span>
-                    </div>
-                    <div class="space-y-6">
-                        <div v-for="row in scopedReport('common')" :key="row.id" class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span class="text-slate-500">{{ row.name }}</span>
+                    <h3 class="font-black text-slate-800 mb-6">🏢 共同支出：${{ scopedExpense('common').toLocaleString() }}</h3>
+                    <div class="space-y-4">
+                        <div v-for="row in scopedReport('common')" :key="row.id" class="space-y-1">
+                            <div class="flex justify-between text-[10px] font-bold">
+                                <span>{{ row.name }}</span>
                                 <span :class="row.diff < 0 ? 'text-red-500' : 'text-emerald-600'">${{ row.expense.toLocaleString() }} / ${{ row.budget.toLocaleString() }}</span>
                             </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div :style="{ width: Math.min(row.percent, 100) + '%' }" :class="['h-full transition-all duration-700', row.percent > 100 ? 'bg-red-500' : 'bg-blue-500']"></div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div :style="{ width: Math.min(row.percent, 100) + '%' }" :class="['h-full bg-blue-500', row.percent > 100 ? 'bg-red-500' : '']"></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-8 border-purple-500">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black text-slate-800">👤 個人支出分析</h3>
-                        <span class="text-purple-600 font-black">${{ scopedExpense('personal').toLocaleString() }}</span>
-                    </div>
-                    <div class="space-y-6">
-                        <div v-for="row in scopedReport('personal')" :key="row.id" class="space-y-2">
-                            <div class="flex justify-between text-xs font-bold">
-                                <span class="text-slate-500">{{ row.name }}</span>
+                    <h3 class="font-black text-slate-800 mb-6">👤 個人支出：${{ scopedExpense('personal').toLocaleString() }}</h3>
+                    <div class="space-y-4">
+                        <div v-for="row in scopedReport('personal')" :key="row.id" class="space-y-1">
+                            <div class="flex justify-between text-[10px] font-bold">
+                                <span>{{ row.name }}</span>
                                 <span :class="row.diff < 0 ? 'text-red-500' : 'text-emerald-600'">${{ row.expense.toLocaleString() }} / ${{ row.budget.toLocaleString() }}</span>
                             </div>
-                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                                <div :style="{ width: Math.min(row.percent, 100) + '%' }" :class="['h-full transition-all duration-700', row.percent > 100 ? 'bg-red-500' : 'bg-purple-500']"></div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div :style="{ width: Math.min(row.percent, 100) + '%' }" :class="['h-full bg-purple-500', row.percent > 100 ? 'bg-red-500' : '']"></div>
                             </div>
                         </div>
                     </div>
@@ -181,52 +171,54 @@
             </div>
 
             <div v-show="currentTab === 'savings'" class="space-y-4">
-                <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-4 border-amber-400">
-                    <h3 class="text-xs font-black text-slate-400 mb-6 uppercase tracking-widest">Monthly Budget Limit</h3>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm">
                     <div class="space-y-6">
                         <div>
                             <label class="text-[10px] font-black text-blue-500 uppercase">🏢 共同總預算目標</label>
-                            <input type="number" v-model.number="currentSavingsTarget.common" @change="saveSavings" class="w-full border-b-2 border-slate-100 py-3 text-2xl font-black outline-none focus:border-blue-500">
-                            <p class="text-[10px] text-slate-400 mt-2 font-bold">已編列預算差額: <span class="text-slate-800">${{ (currentSavingsTarget.common - scopedBudget('common')).toLocaleString() }}</span></p>
+                            <input type="number" v-model.number="currentSavingsTarget.common" @change="saveSavings" class="w-full border-b-2 border-slate-100 py-3 text-2xl font-black outline-none">
+                            <p class="text-[10px] text-slate-400 mt-2">未編列預算差額: <span class="text-slate-800 font-bold">${{ (currentSavingsTarget.common - scopedBudget('common')).toLocaleString() }}</span></p>
                         </div>
                         <div>
-                            <label class="text-[10px] font-black text-purple-500 uppercase">👤 個人總預算目標 ({{ currentUser }})</label>
-                            <input type="number" v-model.number="currentSavingsTarget.personal" @change="saveSavings" class="w-full border-b-2 border-slate-100 py-3 text-2xl font-black outline-none focus:border-purple-500">
-                            <p class="text-[10px] text-slate-400 mt-2 font-bold">已編列預算差額: <span class="text-slate-800">${{ (currentSavingsTarget.personal - scopedBudget('personal')).toLocaleString() }}</span></p>
+                            <label class="text-[10px] font-black text-purple-500 uppercase">👤 個人總預算目標</label>
+                            <input type="number" v-model.number="currentSavingsTarget.personal" @change="saveSavings" class="w-full border-b-2 border-slate-100 py-3 text-2xl font-black outline-none">
+                            <p class="text-[10px] text-slate-400 mt-2">未編列預算差額: <span class="text-slate-800 font-bold">${{ (currentSavingsTarget.personal - scopedBudget('personal')).toLocaleString() }}</span></p>
                         </div>
                     </div>
                 </div>
-                
-                <div class="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden">
-                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/10 rounded-full"></div>
+                <div class="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl">
                     <p class="text-[10px] opacity-50 font-black uppercase tracking-widest">本月預計實際存款</p>
-                    <p class="text-[10px] opacity-30 font-bold mb-2">( 總預算目標 - 實際支出 )</p>
-                    <h2 class="text-5xl font-black tracking-tighter">${{ ((currentSavingsTarget.common + currentSavingsTarget.personal) - (scopedExpense('common') + scopedExpense('personal'))).toLocaleString() }}</h2>
+                    <h2 class="text-4xl font-black tracking-tighter mt-2">
+                        ${{ ((currentSavingsTarget.common + currentSavingsTarget.personal) - (scopedExpense('common') + scopedExpense('personal'))).toLocaleString() }}
+                    </h2>
                 </div>
             </div>
 
             <div v-show="currentTab === 'setting'" class="space-y-6">
                 <section class="bg-white p-6 rounded-[2rem] shadow-sm">
-                    <h3 class="font-black text-xs text-slate-400 uppercase mb-4 tracking-widest">🏷️ Categories</h3>
+                    <h3 class="font-black text-xs text-slate-400 uppercase mb-4">🏷️ Categories</h3>
                     <div class="flex gap-2 mb-6">
                         <input type="text" v-model="newItemName.cat" placeholder="新分類" class="flex-1 border rounded-xl px-4 py-3 text-sm bg-slate-50">
                         <button @click="addItem('cat')" class="bg-blue-600 text-white px-6 rounded-xl text-sm font-bold">新增</button>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <div v-for="cat in userCategories" :key="cat.id" class="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-xs flex items-center gap-3">
-                            <span class="font-bold text-slate-600">{{ cat.name }}</span>
+                        <div v-for="cat in userCategories" :key="cat.id" class="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-[10px] flex items-center gap-3">
+                            <span>{{ cat.name }}</span>
                             <button @click="removeItem('cat', cat.id)" class="text-slate-300">✕</button>
                         </div>
                     </div>
                 </section>
-                <button @click="logout" class="w-full py-4 text-red-500 font-bold text-sm">登出系統</button>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm">
+                    <h3 class="font-black text-xs text-slate-400 uppercase mb-4">🔐 Security</h3>
+                    <button @click="changePassword" class="w-full py-4 bg-slate-100 rounded-xl text-sm font-bold">修改進入密碼</button>
+                </div>
+                <button @click="isLoggedIn = false" class="w-full py-4 text-red-500 font-bold text-sm">登出系統</button>
             </div>
         </main>
     </template>
 </div>
 
 <script>
-// === 1. 請填入你的 Google Apps Script 網頁應用程式 URL ===
+// === 請貼上你的 GAS URL ===
 const GAS_URL = '[https://script.google.com/macros/s/AKfycbyKggQrPg724DrYAiXVB5a5N-5GNYWU0YNZpuceyZyo7cvSxpjCu7iW7iZE7mEedC19/exec](https://script.google.com/macros/s/AKfycbyKggQrPg724DrYAiXVB5a5N-5GNYWU0YNZpuceyZyo7cvSxpjCu7iW7iZE7mEedC19/exec)'; 
 
 const { createApp, ref, computed, watch, onMounted } = Vue;
@@ -237,6 +229,7 @@ createApp({
         const syncing = ref(false);
         const isLoggedIn = ref(false);
         const loginPwd = ref('');
+        const loginError = ref(false);
         const currentTab = ref('expense');
         const currentMonth = ref(new Date().toISOString().slice(0, 7));
         
@@ -244,121 +237,94 @@ createApp({
         const currentUser = ref(urlParams.get('user') || 'Eric');
 
         const tabs = [
-            { id: 'expense', name: '記帳' },
-            { id: 'budget', name: '預算' },
-            { id: 'report', name: '分析' },
-            { id: 'savings', name: '存款' },
-            { id: 'setting', name: '設定' }
+            { id: 'expense', name: '記帳' }, { id: 'budget', name: '預算' }, 
+            { id: 'report', name: '分析' }, { id: 'savings', name: '存款' }, { id: 'setting', name: '設定' }
         ];
 
-        // 資料變數 (保留原變數名確保資料庫對接)
+        // 資料變數
         const budgets = ref([]);
         const expenses = ref([]);
         const categories = ref([]);
         const paymentMethods = ref([]);
-        const savingsTargets = ref([]); // 結構: { month, common, personal_Eric, personal_Livia, password }
+        const savingsTargets = ref([]);
+        const config = ref({ password: '1234' }); // 預設密碼與 GAS 同步
 
         const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', categoryId: '', paymentMethodId: '', amount: null, scope: 'personal' });
         const budgetForm = ref({ categoryId: '', amount: null, scope: 'personal' });
         const newItemName = ref({ cat: '', pm: '' });
 
-        // --- 核心邏輯 ---
         const loadData = async () => {
             try {
                 const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load' }) });
-                const data = await response.json();
-                if (data.categories) {
-                    budgets.value = data.budgets || [];
-                    expenses.value = data.expenses || [];
-                    categories.value = data.categories || [];
-                    paymentMethods.value = data.paymentMethods || [];
-                    savingsTargets.value = data.savingsTargets || [];
-                } else { initDefaults(); }
+                const res = await response.json();
+                if (res.data) {
+                    budgets.value = res.data.budgets || [];
+                    expenses.value = res.data.expenses || [];
+                    categories.value = res.data.categories || [];
+                    paymentMethods.value = res.data.paymentMethods || [];
+                    savingsTargets.value = res.data.savingsTargets || [];
+                    config.value = res.config || { password: '1234' }; // 讀取 GAS 的 config
+                }
             } catch (e) { console.error(e); }
             finally { isDataLoaded.value = true; }
         };
 
-        const saveData = async () => {
+        const saveData = async (action = 'save') => {
             syncing.value = true;
-            const payload = { action: 'save', data: { budgets: budgets.value, expenses: expenses.value, categories: categories.value, paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value }};
+            let payload = {};
+            if (action === 'save') {
+                payload = { action: 'save', data: { budgets: budgets.value, expenses: expenses.value, categories: categories.value, paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value }};
+            } else {
+                payload = { action: 'saveConfig', config: config.value };
+            }
             try { await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); }
             finally { setTimeout(() => syncing.value = false, 800); }
         };
 
-        const initDefaults = () => {
-            const cats = ['餐飲', '交通', '居住', '娛樂', '醫療'];
-            ['Eric', 'Livia'].forEach(u => {
-                cats.forEach(n => categories.value.push({ id: Date.now() + Math.random(), user: u, name: n }));
-                ['現金', '信用卡'].forEach(n => paymentMethods.value.push({ id: Date.now() + Math.random(), user: u, name: n }));
-            });
-            savingsTargets.value.push({ month: 'SYSTEM', password: '123' }); // 預設密碼
-        };
-
-        let timer;
         watch([budgets, expenses, categories, paymentMethods, savingsTargets], () => {
-            if (!isDataLoaded.value) return;
-            clearTimeout(timer);
-            timer = setTimeout(saveData, 1500);
+            if (isDataLoaded.value && isLoggedIn.value) saveData('save');
         }, { deep: true });
 
         onMounted(loadData);
 
-        // --- 登入控制 ---
         const handleLogin = () => {
-            const sys = savingsTargets.value.find(s => s.month === 'SYSTEM');
-            if (sys && loginPwd.value === sys.password) {
+            if (loginPwd.value === String(config.value.password)) {
                 isLoggedIn.value = true;
-                localStorage.setItem('lastLogin', Date.now());
-            } else {
-                alert('密碼錯誤');
-            }
+                loginError.value = false;
+            } else { loginError.value = true; loginPwd.value = ''; }
         };
-        const changePassword = () => {
-            const newP = prompt('請輸入新密碼');
-            if (newP) {
-                let sys = savingsTargets.value.find(s => s.month === 'SYSTEM');
-                sys.password = newP;
-                alert('密碼已修改，將同步至雲端');
-            }
-        };
-        const logout = () => { isLoggedIn.value = false; loginPwd.value = ''; };
 
-        // --- 計算與工具 ---
+        const changePassword = () => {
+            const p = prompt('請輸入新密碼');
+            if (p) { config.value.password = p; saveData('saveConfig'); alert('密碼已更新'); }
+        };
+
+        // --- 顯示邏輯 ---
         const userCategories = computed(() => categories.value.filter(c => c.user === currentUser.value));
         const userPaymentMethods = computed(() => paymentMethods.value.filter(p => p.user === currentUser.value));
         const filteredBudgets = computed(() => budgets.value.filter(b => b.month === currentMonth.value && b.user === currentUser.value));
         const filteredExpenses = computed(() => expenses.value.filter(e => e.date.startsWith(currentMonth.value) && e.user === currentUser.value));
 
-        // 日期分組邏輯
         const groupedExpenses = computed(() => {
             const groups = {};
             filteredExpenses.value.forEach(e => {
                 if (!groups[e.date]) groups[e.date] = [];
                 groups[e.date].push(e);
             });
-            return Object.keys(groups).sort().reverse().reduce((acc, date) => { acc[date] = groups[date]; return acc; }, {});
+            return Object.keys(groups).sort().reverse().reduce((acc, d) => { acc[d] = groups[d]; return acc; }, {});
         });
-
-        const formatDate = (dateStr) => {
-            const d = new Date(dateStr);
-            return `${d.getMonth()+1}月${d.getDate()}日 星期${['日','一','二','三','四','五','六'][d.getDay()]}`;
-        };
 
         const currentSavingsTarget = computed(() => {
-            let target = savingsTargets.value.find(s => s.month === currentMonth.value);
-            if (!target) {
-                target = { month: currentMonth.value, common: 0, personal_Eric: 0, personal_Livia: 0 };
-                savingsTargets.value.push(target);
+            let t = savingsTargets.value.find(s => s.month === currentMonth.value);
+            if (!t) {
+                t = { month: currentMonth.value, common: 0, personal_Eric: 0, personal_Livia: 0 };
+                savingsTargets.value.push(t);
             }
-            return {
-                common: target.common,
-                personal: currentUser.value === 'Eric' ? target.personal_Eric : target.personal_Livia
-            };
+            return { common: t.common, personal: currentUser.value === 'Eric' ? t.personal_Eric : t.personal_Livia };
         });
 
-        // 報表數據
-        const scopedBudget = (scope) => filteredBudgets.value.filter(b => b.scope === scope).reduce((s,b)=>s+(b.amount||0), 0);
-        const scopedExpense = (scope) => filteredExpenses.value.filter(e => e.scope === scope).reduce((s,e)=>s+(e.amount||0), 0);
+        const scopedBudget = (s) => filteredBudgets.value.filter(b => b.scope === s).reduce((sum,b)=>sum+(b.amount||0), 0);
+        const scopedExpense = (s) => filteredExpenses.value.filter(e => e.scope === s).reduce((sum,e)=>sum+(e.amount||0), 0);
         
         const scopedReport = (scope) => {
             return userCategories.value.map(cat => {
@@ -368,45 +334,22 @@ createApp({
             }).filter(row => row.budget > 0 || row.expense > 0);
         };
 
-        const resolveCategoryName = (id) => categories.value.find(c => c.id === id)?.name || '未分類';
-        const resolvePaymentName = (id) => paymentMethods.value.find(p => p.id === id)?.name || '未知';
-
-        // --- 動作 ---
-        const addExpense = () => {
-            expenses.value.push({ ...expenseForm.value, id: Date.now(), user: currentUser.value });
-            expenseForm.value.title = ''; expenseForm.value.amount = null;
-        };
-        const addBudget = () => {
-            budgets.value.push({ ...budgetForm.value, id: Date.now(), user: currentUser.value, month: currentMonth.value });
-            budgetForm.value.amount = null;
-        };
-        const deleteItem = (type, id) => {
-            if (type === 'budgets') budgets.value = budgets.value.filter(i => i.id !== id);
-            else expenses.value = expenses.value.filter(i => i.id !== id);
-        };
-        const saveSavings = () => {
-            let target = savingsTargets.value.find(s => s.month === currentMonth.value);
-            target.common = currentSavingsTarget.value.common;
-            if (currentUser.value === 'Eric') target.personal_Eric = currentSavingsTarget.value.personal;
-            else target.personal_Livia = currentSavingsTarget.value.personal;
-        };
-        const addItem = (type) => {
-            const name = newItemName.value.cat;
-            if (!name) return;
-            categories.value.push({ id: Date.now(), user: currentUser.value, name });
-            newItemName.value.cat = '';
-        };
-        const removeItem = (type, id) => {
-            categories.value = categories.value.filter(c => c.id !== id);
-        };
-
         return {
-            currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing,
-            isLoggedIn, loginPwd, handleLogin, changePassword, logout,
-            expenseForm, budgetForm, newItemName, groupedExpenses,
-            userCategories, userPaymentMethods, filteredBudgets, filteredExpenses,
-            currentSavingsTarget, scopedBudget, scopedExpense, scopedReport,
-            resolveCategoryName, resolvePaymentName, addExpense, addBudget, deleteItem, saveSavings, addItem, removeItem, formatDate,
+            currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
+            expenseForm, budgetForm, newItemName, groupedExpenses, userCategories, userPaymentMethods,
+            filteredBudgets, currentSavingsTarget, scopedBudget, scopedExpense, scopedReport,
+            handleLogin, changePassword, addExpense: () => { expenses.value.push({...expenseForm.value, id: Date.now(), user: currentUser.value}); expenseForm.value.title = ''; expenseForm.value.amount = null; },
+            addBudget: () => { budgets.value.push({...budgetForm.value, id: Date.now(), user: currentUser.value, month: currentMonth.value}); budgetForm.value.amount = null; },
+            deleteItem: (type, id) => { if (type === 'budgets') budgets.value = budgets.value.filter(i => i.id !== id); else expenses.value = expenses.value.filter(i => i.id !== id); },
+            saveSavings: () => { 
+                let t = savingsTargets.value.find(s => s.month === currentMonth.value);
+                t.common = currentSavingsTarget.value.common;
+                if (currentUser.value === 'Eric') t.personal_Eric = currentSavingsTarget.value.personal; else t.personal_Livia = currentSavingsTarget.value.personal;
+            },
+            addItem: (type) => { categories.value.push({id: Date.now(), user: currentUser.value, name: newItemName.value.cat}); newItemName.value.cat = ''; },
+            removeItem: (type, id) => { categories.value = categories.value.filter(c => c.id !== id); },
+            formatDate: (d) => `${new Date(d).getDate()}日 星期${['日','一','二','三','四','五','六'][new Date(d).getDay()]}`,
+            resolveCategoryName: (id) => categories.value.find(c => c.id === id)?.name || '未分類',
             currentTabName: computed(() => tabs.find(t=>t.id===currentTab.value).name)
         };
     }
