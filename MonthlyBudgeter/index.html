@@ -360,6 +360,10 @@ createApp({
         const filteredBudgets = computed(() => budgets.value.filter(b => b.month === currentMonth.value && b.user === currentUser.value));
         const filteredExpenses = computed(() => expenses.value.filter(e => e.date.startsWith(currentMonth.value) && e.user === currentUser.value));
 
+        // ✅ 不限使用者，用於共同支出統計（兩人都可能記錄共同花費）
+        const allMonthExpenses = computed(() => expenses.value.filter(e => e.date.startsWith(currentMonth.value)));
+        const allMonthBudgets = computed(() => budgets.value.filter(b => b.month === currentMonth.value));
+
         const groupedExpenses = computed(() => {
             const groups = {};
             filteredExpenses.value.forEach(e => {
@@ -379,12 +383,29 @@ createApp({
         });
 
         const scopedBudget = (s) => filteredBudgets.value.filter(b => b.scope === s).reduce((sum,b)=>sum+(b.amount||0), 0);
-        const scopedExpense = (s) => filteredExpenses.value.filter(e => e.scope === s).reduce((sum,e)=>sum+(e.amount||0), 0);
-        
+        // ✅ common scope 統計所有使用者的花費；personal scope 只統計當前使用者
+        const scopedExpense = (s) => {
+            const source = s === 'common' ? allMonthExpenses.value : filteredExpenses.value;
+            return source.filter(e => e.scope === s).reduce((sum,e)=>sum+(e.amount||0), 0);
+        };
+
         const scopedReport = (scope) => {
-            return userCategories.value.map(cat => {
-                const b = filteredBudgets.value.filter(b => b.categoryId === cat.id && b.scope === scope).reduce((s,v)=>s+v.amount, 0);
-                const e = filteredExpenses.value.filter(e => e.categoryId === cat.id && e.scope === scope).reduce((s,v)=>s+v.amount, 0);
+            // ✅ common scope 用全部使用者的分類與花費/預算；personal 只用當前使用者
+            const catSource = scope === 'common' ? categories.value : userCategories.value;
+            const expSource = scope === 'common' ? allMonthExpenses.value : filteredExpenses.value;
+            const budSource = scope === 'common' ? allMonthBudgets.value : filteredBudgets.value;
+            // 去除重複分類名稱（兩人可能有同名分類，合併計算）
+            const seen = new Set();
+            const uniqueCats = catSource.filter(cat => {
+                if (seen.has(cat.name)) return false;
+                seen.add(cat.name);
+                return true;
+            });
+            return uniqueCats.map(cat => {
+                // 找出同名分類的所有 id
+                const catIds = catSource.filter(c => c.name === cat.name).map(c => c.id);
+                const b = budSource.filter(b => catIds.includes(b.categoryId) && b.scope === scope).reduce((s,v)=>s+v.amount, 0);
+                const e = expSource.filter(e => catIds.includes(e.categoryId) && e.scope === scope).reduce((s,v)=>s+v.amount, 0);
                 return { id: cat.id, name: cat.name, budget: b, expense: e, diff: b - e, percent: b > 0 ? (e/b)*100 : (e>0?100:0) };
             }).filter(row => row.budget > 0 || row.expense > 0);
         };
