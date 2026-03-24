@@ -254,19 +254,63 @@ createApp({
         const newItemName = ref({ cat: '', pm: '' });
 
         const loadData = async () => {
+            isLoading = true;
             try {
                 const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load' }) });
                 const res = await response.json();
                 if (res.data) {
-                    budgets.value = res.data.budgets || [];
-                    expenses.value = res.data.expenses || [];
-                    categories.value = res.data.categories || [];
-                    paymentMethods.value = res.data.paymentMethods || [];
-                    savingsTargets.value = res.data.savingsTargets || [];
-                    config.value = res.config || { password: '1234' }; // 讀取 GAS 的 config
+                    // ✅ 只在有資料時才覆蓋，避免空陣列清空雲端資料
+                    if (Array.isArray(res.data.budgets) && res.data.budgets.length > 0) budgets.value = res.data.budgets;
+                    if (Array.isArray(res.data.expenses) && res.data.expenses.length > 0) expenses.value = res.data.expenses;
+                    if (Array.isArray(res.data.categories) && res.data.categories.length > 0) categories.value = res.data.categories;
+                    if (Array.isArray(res.data.paymentMethods) && res.data.paymentMethods.length > 0) paymentMethods.value = res.data.paymentMethods;
+                    if (Array.isArray(res.data.savingsTargets) && res.data.savingsTargets.length > 0) savingsTargets.value = res.data.savingsTargets;
+                    config.value = res.config || { password: '1234' };
+                    // ✅ 雲端載入成功後，同步更新 localStorage 備份
+                    saveLocalBackup();
+                } else {
+                    console.warn('loadData: res.data 為空，嘗試從 localStorage 還原');
+                    loadLocalBackup();
                 }
-            } catch (e) { console.error(e); }
-            finally { isDataLoaded.value = true; }
+            } catch (e) {
+                console.error('loadData 失敗:', e);
+                // ✅ 網路錯誤時，從 localStorage 還原，絕不用空資料覆蓋
+                const restored = loadLocalBackup();
+                if (restored) {
+                    alert('⚠️ 無法連線至雲端，已從本機備份還原資料。請確認網路後重新整理。');
+                } else {
+                    alert('⚠️ 無法連線至雲端，且無本機備份。請檢查網路後重新整理。');
+                }
+            } finally {
+                isLoading = false;
+                isDataLoaded.value = true;
+            }
+        };
+
+        const saveLocalBackup = () => {
+            try {
+                localStorage.setItem('financeBackup', JSON.stringify({
+                    budgets: budgets.value, expenses: expenses.value,
+                    categories: categories.value, paymentMethods: paymentMethods.value,
+                    savingsTargets: savingsTargets.value,
+                    savedAt: new Date().toISOString()
+                }));
+            } catch(e) { console.warn('localStorage 備份失敗', e); }
+        };
+
+        const loadLocalBackup = () => {
+            try {
+                const raw = localStorage.getItem('financeBackup');
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                if (Array.isArray(data.budgets)) budgets.value = data.budgets;
+                if (Array.isArray(data.expenses)) expenses.value = data.expenses;
+                if (Array.isArray(data.categories)) categories.value = data.categories;
+                if (Array.isArray(data.paymentMethods)) paymentMethods.value = data.paymentMethods;
+                if (Array.isArray(data.savingsTargets)) savingsTargets.value = data.savingsTargets;
+                console.log('已從 localStorage 還原備份，備份時間:', data.savedAt);
+                return true;
+            } catch(e) { return false; }
         };
 
         const saveData = async (action = 'save') => {
@@ -274,15 +318,26 @@ createApp({
             let payload = {};
             if (action === 'save') {
                 payload = { action: 'save', data: { budgets: budgets.value, expenses: expenses.value, categories: categories.value, paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value }};
+                // ✅ 每次存雲端前，先更新 localStorage 備份
+                saveLocalBackup();
             } else {
                 payload = { action: 'saveConfig', config: config.value };
             }
-            try { await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); }
-            finally { setTimeout(() => syncing.value = false, 800); }
+            try {
+                // ✅ 移除 mode: 'no-cors'，才能偵測到錯誤
+                await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+            } catch(e) {
+                console.error('saveData 失敗，資料已保留在 localStorage:', e);
+            } finally {
+                setTimeout(() => syncing.value = false, 800);
+            }
         };
 
+        // ✅ 加入 isLoading flag，載入期間禁止 watch 觸發寫入
+        let isLoading = false;
+
         watch([budgets, expenses, categories, paymentMethods, savingsTargets], () => {
-            if (isDataLoaded.value && isLoggedIn.value) saveData('save');
+            if (isDataLoaded.value && isLoggedIn.value && !isLoading) saveData('save');
         }, { deep: true });
 
         onMounted(loadData);
