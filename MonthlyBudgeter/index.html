@@ -207,6 +207,22 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- ✅ 備份與還原 -->
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm">
+                    <h3 class="font-black text-xs text-slate-400 uppercase mb-4">💾 Backup & Restore</h3>
+                    <div class="space-y-3">
+                        <button @click="exportBackupManual" class="w-full py-4 bg-emerald-500 text-white rounded-xl text-sm font-bold active:scale-95 transition-all">
+                            ⬇️ 匯出備份 JSON
+                        </button>
+                        <label class="block w-full py-4 bg-slate-100 rounded-xl text-sm font-bold text-center cursor-pointer active:scale-95 transition-all">
+                            ⬆️ 匯入備份還原
+                            <input type="file" accept=".json" @change="importBackup" class="hidden">
+                        </label>
+                        <p class="text-[10px] text-slate-400 text-center">上次自動備份：{{ lastAutoBackupDate || '尚未備份' }}</p>
+                    </div>
+                </div>
+
                 <div class="bg-white p-6 rounded-[2rem] shadow-sm">
                     <h3 class="font-black text-xs text-slate-400 uppercase mb-4">🔐 Security</h3>
                     <button @click="changePassword" class="w-full py-4 bg-slate-100 rounded-xl text-sm font-bold">修改進入密碼</button>
@@ -410,6 +426,76 @@ createApp({
             }).filter(row => row.budget > 0 || row.expense > 0);
         };
 
+        // ✅ 自動每日備份
+        const lastAutoBackupDate = ref(localStorage.getItem('lastAutoBackupDate') || '');
+
+        const exportBackup = (silent = false) => {
+            const data = {
+                budgets: budgets.value, expenses: expenses.value, categories: categories.value,
+                paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.download = `finance_backup_${dateStr}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            if (!silent) {
+                lastAutoBackupDate.value = dateStr;
+                localStorage.setItem('lastAutoBackupDate', dateStr);
+            }
+        };
+
+        // 手動匯出（使用者主動按下）
+        const exportBackupManual = () => {
+            const dateStr = new Date().toISOString().slice(0, 10);
+            exportBackup(false);
+            lastAutoBackupDate.value = dateStr;
+            localStorage.setItem('lastAutoBackupDate', dateStr);
+        };
+
+        // 登入後若今天尚未自動備份則自動下載
+        watch(isLoggedIn, (val) => {
+            if (!val) return;
+            const today = new Date().toISOString().slice(0, 10);
+            if (lastAutoBackupDate.value !== today) {
+                // 等資料載入完才備份
+                const unwatch = watch(isDataLoaded, (loaded) => {
+                    if (!loaded) return;
+                    exportBackup(false);
+                    unwatch();
+                }, { immediate: true });
+            }
+        });
+
+        const importBackup = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!confirm(`⚠️ 匯入將覆蓋現有所有資料，確定繼續？`)) {
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.budgets) budgets.value = data.budgets;
+                    if (data.expenses) expenses.value = data.expenses;
+                    if (data.categories) categories.value = data.categories;
+                    if (data.paymentMethods) paymentMethods.value = data.paymentMethods;
+                    if (data.savingsTargets) savingsTargets.value = data.savingsTargets;
+                    saveData('save');
+                    alert('✅ 資料已成功匯入並同步至雲端');
+                } catch (err) {
+                    alert('❌ 匯入失敗，請確認檔案格式正確');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        };
+
         return {
             currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
             expenseForm, budgetForm, newItemName, groupedExpenses, userCategories, userPaymentMethods,
@@ -426,7 +512,8 @@ createApp({
             removeItem: (type, id) => { categories.value = categories.value.filter(c => c.id !== id); },
             formatDate: (d) => `${new Date(d).getDate()}日 星期${['日','一','二','三','四','五','六'][new Date(d).getDay()]}`,
             resolveCategoryName: (id) => categories.value.find(c => c.id === id)?.name || '未分類',
-            currentTabName: computed(() => tabs.find(t=>t.id===currentTab.value).name)
+            currentTabName: computed(() => tabs.find(t=>t.id===currentTab.value).name),
+            exportBackupManual, importBackup, lastAutoBackupDate
         };
     }
 }).mount('#app');
