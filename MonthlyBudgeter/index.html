@@ -282,10 +282,15 @@
                         </span>
                     </p>
                     <div v-if="scopedReport('common').length === 0" class="text-center py-8 text-slate-300 text-xs">尚無共同預算/支出資料</div>
-                    <div v-else class="space-y-4">
-                        <div v-for="row in scopedReport('common')" :key="row.id" class="space-y-1.5">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold text-slate-600">{{ row.name }}</span>
+                    <div v-else class="space-y-3">
+                        <div v-for="row in scopedReport('common')" :key="row.id" class="border border-slate-100 rounded-lg overflow-hidden">
+                            <!-- 分類標題 -->
+                            <div @click="expandedCategoryId = expandedCategoryId === row.id ? null : row.id"
+                                 class="cursor-pointer hover:bg-blue-50 p-3 transition-all flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span :class="['text-sm transition-transform', expandedCategoryId === row.id ? 'transform rotate-90' : '']">▶</span>
+                                    <span class="text-xs font-bold text-slate-600">{{ row.name }}</span>
+                                </div>
                                 <div class="text-right">
                                     <span :class="['text-[10px] font-black num-font', row.diff < 0 ? 'text-red-500' : 'text-emerald-600']">
                                         ${{ row.expense.toLocaleString() }}
@@ -293,13 +298,40 @@
                                     <span class="text-[10px] text-slate-300 num-font"> / ${{ row.budget.toLocaleString() }}</span>
                                 </div>
                             </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="progress-bar h-full rounded-full"
-                                     :class="row.percent > 100 ? 'bg-red-400' : row.percent > 80 ? 'bg-amber-400' : 'bg-blue-400'"
-                                     :style="{ width: Math.min(row.percent, 100) + '%' }">
+                            
+                            <!-- 進度條 -->
+                            <div class="px-3 pb-3">
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="progress-bar h-full rounded-full"
+                                         :class="row.percent > 100 ? 'bg-red-400' : row.percent > 80 ? 'bg-amber-400' : 'bg-blue-400'"
+                                         :style="{ width: Math.min(row.percent, 100) + '%' }">
+                                    </div>
                                 </div>
+                                <p class="text-[9px] text-slate-400 text-right mt-1 num-font">{{ row.percent.toFixed(0) }}%</p>
                             </div>
-                            <p class="text-[9px] text-slate-400 text-right num-font">{{ row.percent.toFixed(0) }}%</p>
+
+                            <!-- 展開的支出項目 -->
+                            <transition name="slide">
+                                <div v-if="expandedCategoryId === row.id" class="bg-blue-50 border-t border-slate-100 divide-y divide-slate-100">
+                                    <div v-for="expense in getCategoryExpenses(row.name, 'common')" :key="expense.id"
+                                         class="p-3 flex justify-between items-start gap-3 hover:bg-blue-100 transition-all">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[11px] font-bold text-slate-700">{{ expense.title }}</p>
+                                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                                <span class="text-[9px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold">{{ expense.date }}</span>
+                                                <span :class="['text-[9px] font-bold px-2 py-0.5 rounded', expense.user === 'Eric' ? 'bg-blue-200 text-blue-700' : 'bg-purple-200 text-purple-700']">
+                                                    👤 {{ expense.user }}
+                                                </span>
+                                                <span class="text-[9px] bg-white text-slate-500 px-2 py-0.5 rounded">{{ resolvePaymentName(expense.paymentMethodId) }}</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] font-black text-slate-800 num-font flex-shrink-0">${{ expense.amount.toLocaleString() }}</span>
+                                    </div>
+                                    <div v-if="getCategoryExpenses(row.name, 'common').length === 0" class="p-3 text-center text-slate-400 text-[10px]">
+                                        暫無支出項目
+                                    </div>
+                                </div>
+                            </transition>
                         </div>
                     </div>
                 </div>
@@ -313,10 +345,15 @@
                         </span>
                     </p>
                     <div v-if="scopedReport('personal').length === 0" class="text-center py-8 text-slate-300 text-xs">尚無個人預算/支出資料</div>
-                    <div v-else class="space-y-4">
-                        <div v-for="row in scopedReport('personal')" :key="row.id" class="space-y-1.5">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold text-slate-600">{{ row.name }}</span>
+                    <div v-else class="space-y-3">
+                        <div v-for="row in scopedReport('personal')" :key="row.id" class="border border-slate-100 rounded-lg overflow-hidden">
+                            <!-- 分類標題 -->
+                            <div @click="expandedCategoryId = expandedCategoryId === ('personal-' + row.id) ? null : ('personal-' + row.id)"
+                                 class="cursor-pointer hover:bg-purple-50 p-3 transition-all flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span :class="['text-sm transition-transform', expandedCategoryId === ('personal-' + row.id) ? 'transform rotate-90' : '']">▶</span>
+                                    <span class="text-xs font-bold text-slate-600">{{ row.name }}</span>
+                                </div>
                                 <div class="text-right">
                                     <span :class="['text-[10px] font-black num-font', row.diff < 0 ? 'text-red-500' : 'text-emerald-600']">
                                         ${{ row.expense.toLocaleString() }}
@@ -324,13 +361,40 @@
                                     <span class="text-[10px] text-slate-300 num-font"> / ${{ row.budget.toLocaleString() }}</span>
                                 </div>
                             </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="progress-bar h-full rounded-full"
-                                     :class="row.percent > 100 ? 'bg-red-400' : row.percent > 80 ? 'bg-amber-400' : 'bg-purple-400'"
-                                     :style="{ width: Math.min(row.percent, 100) + '%' }">
+                            
+                            <!-- 進度條 -->
+                            <div class="px-3 pb-3">
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="progress-bar h-full rounded-full"
+                                         :class="row.percent > 100 ? 'bg-red-400' : row.percent > 80 ? 'bg-amber-400' : 'bg-purple-400'"
+                                         :style="{ width: Math.min(row.percent, 100) + '%' }">
+                                    </div>
                                 </div>
+                                <p class="text-[9px] text-slate-400 text-right mt-1 num-font">{{ row.percent.toFixed(0) }}%</p>
                             </div>
-                            <p class="text-[9px] text-slate-400 text-right num-font">{{ row.percent.toFixed(0) }}%</p>
+
+                            <!-- 展開的支出項目 -->
+                            <transition name="slide">
+                                <div v-if="expandedCategoryId === ('personal-' + row.id)" class="bg-purple-50 border-t border-slate-100 divide-y divide-slate-100">
+                                    <div v-for="expense in getCategoryExpenses(row.name, 'personal')" :key="expense.id"
+                                         class="p-3 flex justify-between items-start gap-3 hover:bg-purple-100 transition-all">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[11px] font-bold text-slate-700">{{ expense.title }}</p>
+                                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                                <span class="text-[9px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold">{{ expense.date }}</span>
+                                                <span :class="['text-[9px] font-bold px-2 py-0.5 rounded', expense.user === 'Eric' ? 'bg-blue-200 text-blue-700' : 'bg-purple-200 text-purple-700']">
+                                                    👤 {{ expense.user }}
+                                                </span>
+                                                <span class="text-[9px] bg-white text-slate-500 px-2 py-0.5 rounded">{{ resolvePaymentName(expense.paymentMethodId) }}</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] font-black text-slate-800 num-font flex-shrink-0">${{ expense.amount.toLocaleString() }}</span>
+                                    </div>
+                                    <div v-if="getCategoryExpenses(row.name, 'personal').length === 0" class="p-3 text-center text-slate-400 text-[10px]">
+                                        暫無支出項目
+                                    </div>
+                                </div>
+                            </transition>
                         </div>
                     </div>
                 </div>
@@ -614,6 +678,7 @@ createApp({
         const budgetForm = ref({ categoryId: '', amount: null, scope: 'personal' });
         const newItemName = ref({ cat: '', pm: '' });
         const editingExpense = ref(null);
+        const expandedCategoryId = ref(null);
 
         // ===== 資料載入 =====
         let isLoading = false;
@@ -825,17 +890,29 @@ createApp({
             }).filter(row => row.budget > 0 || row.expense > 0);
         };
 
+        // 獲取特定分類的支出項目
+        const getCategoryExpenses = (categoryName, scope) => {
+            const catIds = categories.value.filter(c => c.name === categoryName).map(c => c.id);
+            const source = scope === 'common' ? allMonthExpenses.value : filteredExpenses.value;
+            return source.filter(e => catIds.includes(e.categoryId) && e.scope === scope)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        };
+
         // 支付方式統計
         const paymentStats = computed(() => {
-            const total = filteredExpenses.value.reduce((s,e) => s + e.amount, 0);
+            const expenseSource = currentUser.value === 'Eric' ? 
+                allMonthExpenses.value.filter(e => e.user === 'Eric' || e.scope === 'common') :
+                allMonthExpenses.value.filter(e => e.user === 'Livia' || e.scope === 'common');
+            const total = expenseSource.reduce((s,e) => s + e.amount, 0);
             if (total === 0) return [];
             const map = {};
             const countMap = {};
-            filteredExpenses.value.forEach(e => {
-                if (!map[e.paymentMethodId]) map[e.paymentMethodId] = 0;
-                if (!countMap[e.paymentMethodId]) countMap[e.paymentMethodId] = 0;
-                map[e.paymentMethodId] += e.amount;
-                countMap[e.paymentMethodId]++;
+            expenseSource.forEach(e => {
+                const pmId = String(e.paymentMethodId);
+                if (!map[pmId]) map[pmId] = 0;
+                if (!countMap[pmId]) countMap[pmId] = 0;
+                map[pmId] += e.amount;
+                countMap[pmId]++;
             });
 
             // 支付方式配置 (顏色 + 圖示)
@@ -929,17 +1006,17 @@ createApp({
 
         // ===== 解析名稱 =====
         const resolveCategoryName = (id) => categories.value.find(c => c.id === id)?.name || '未分類';
-        const resolvePaymentName = (id) => paymentMethods.value.find(p => p.id === id)?.name || '-';
+        const resolvePaymentName = (id) => paymentMethods.value.find(p => String(p.id) === String(id))?.name || '-';
 
         return {
             currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
-            expenseForm, budgetForm, newItemName, editingExpense,
+            expenseForm, budgetForm, newItemName, editingExpense, expandedCategoryId,
             groupedExpenses, userCategories, userPaymentMethods, filteredBudgets,
             currentSavingsTarget, scopedBudget, scopedExpense, scopedReport, paymentStats,
             handleLogin, changePassword, changeMonth,
             openEditExpense, saveEditExpense,
             snapshotKeys, downloadSnapshot,
-            exportBackupManual, importBackup,
+            exportBackupManual, importBackup, getCategoryExpenses,
             addExpense: () => {
                 if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId) return;
                 expenses.value.push({ ...expenseForm.value, id: Date.now(), user: currentUser.value });
