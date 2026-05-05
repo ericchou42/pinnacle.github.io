@@ -44,12 +44,41 @@
                 <p v-if="!isDataLoaded" class="text-slate-500 text-[10px] mt-4 animate-pulse">正在載入雲端配置...</p>
                 <p v-if="loginError" class="text-red-400 text-xs mt-4 animate-bounce">密碼錯誤，請重新輸入</p>
             </div>
-            <input type="password" v-model="loginPwd" placeholder="請輸入通行密碼"
-                   @keyup.enter="handleLogin"
-                   class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-5 text-white text-center text-xl focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-600">
+            
+            <!-- 密碼顯示 -->
+            <div class="text-center">
+                <div class="inline-block bg-slate-800 border border-slate-700 rounded-2xl px-8 py-4">
+                    <div class="text-4xl font-black text-blue-400 tracking-[0.3em] min-h-[60px] flex items-center justify-center">
+                        {{ loginPwd.replace(/./g, '●') || '—' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 數字鍵盤 -->
+            <div class="bg-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="grid grid-cols-3 gap-2">
+                    <button v-for="num in [1,2,3,4,5,6,7,8,9]" :key="num"
+                            @click="loginPwd += String(num)"
+                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-xl text-xl active:scale-95 transition-all">
+                        {{ num }}
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button @click="loginPwd = loginPwd.slice(0, -1)"
+                            class="col-span-2 bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl active:scale-95 transition-all">
+                        ← 刪除
+                    </button>
+                    <button @click="loginPwd += '0'"
+                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-xl text-xl active:scale-95 transition-all">
+                        0
+                    </button>
+                </div>
+            </div>
+
             <button @click="handleLogin"
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-2xl shadow-blue-500/30 active:scale-95 transition-all">
-                進入系統
+                    :disabled="!loginPwd || loginPwd.length === 0"
+                    class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-5 rounded-2xl shadow-2xl shadow-blue-500/30 active:scale-95 transition-all">
+                🔓 進入系統
             </button>
         </div>
     </div>
@@ -208,7 +237,10 @@
                         </select>
                         <input type="number" v-model.number="budgetForm.amount" placeholder="預算金額"
                                class="w-full border border-slate-200 rounded-2xl p-4 text-2xl font-black text-purple-600 bg-purple-50/20 num-font" required>
-                        <button type="submit" class="w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition-all text-sm">＋ 加入預算</button>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="submit" class="w-full bg-purple-600 text-white font-black py-4 rounded-2xl active:scale-95 transition-all text-sm">＋ 加入預算</button>
+                            <button type="button" @click="copyPreviousMonthBudget" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl active:scale-95 transition-all text-sm">📋 複製上月</button>
+                        </div>
                     </form>
                 </section>
 
@@ -1026,6 +1058,41 @@ createApp({
             addBudget: () => {
                 budgets.value.push({ ...budgetForm.value, id: Date.now(), user: currentUser.value, month: currentMonth.value });
                 budgetForm.value.amount = null;
+            },
+            copyPreviousMonthBudget: () => {
+                // 計算上一個月
+                const [y, m] = currentMonth.value.split('-').map(Number);
+                const prevDate = new Date(y, m - 2, 1);
+                const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+                
+                // 取得上月預算
+                const prevBudgets = budgets.value.filter(b => b.month === prevMonth && b.user === currentUser.value);
+                
+                if (prevBudgets.length === 0) {
+                    alert('上月沒有預算記錄');
+                    return;
+                }
+                
+                // 複製上月預算到本月
+                let copiedCount = 0;
+                prevBudgets.forEach(pb => {
+                    // 檢查是否已存在該分類預算
+                    const exists = filteredBudgets.value.some(b => b.categoryId === pb.categoryId && b.scope === pb.scope);
+                    if (!exists) {
+                        budgets.value.push({
+                            ...pb,
+                            id: Date.now() + copiedCount,
+                            month: currentMonth.value
+                        });
+                        copiedCount++;
+                    }
+                });
+                
+                if (copiedCount > 0) {
+                    alert(`✅ 已複製 ${copiedCount} 個預算分類`);
+                } else {
+                    alert('本月已有上月所有預算分類');
+                }
             },
             deleteItem: (type, id) => {
                 if (type === 'budgets') budgets.value = budgets.value.filter(i => i.id !== id);
