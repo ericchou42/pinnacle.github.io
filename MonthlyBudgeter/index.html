@@ -47,29 +47,29 @@
             
             <!-- 密碼顯示 -->
             <div class="text-center">
-                <div class="inline-block bg-slate-800 border border-slate-700 rounded-2xl px-8 py-4">
-                    <div class="text-4xl font-black text-blue-400 tracking-[0.3em] min-h-[60px] flex items-center justify-center">
+                <div class="inline-block bg-slate-800 border border-slate-700 rounded-2xl px-10 py-6">
+                    <div class="text-6xl font-black text-blue-400 tracking-[0.3em] min-h-[90px] flex items-center justify-center">
                         {{ loginPwd.replace(/./g, '●') || '—' }}
                     </div>
                 </div>
             </div>
 
             <!-- 數字鍵盤 -->
-            <div class="bg-slate-800 rounded-2xl p-4 space-y-3">
-                <div class="grid grid-cols-3 gap-2">
+            <div class="bg-slate-800 rounded-2xl p-8 space-y-4">
+                <div class="grid grid-cols-3 gap-4">
                     <button v-for="num in [1,2,3,4,5,6,7,8,9]" :key="num"
                             @click="loginPwd += String(num)"
-                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-xl text-xl active:scale-95 transition-all">
+                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-8 rounded-xl text-4xl active:scale-95 transition-all">
                         {{ num }}
                     </button>
                 </div>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-3 gap-4">
                     <button @click="loginPwd = loginPwd.slice(0, -1)"
-                            class="col-span-2 bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl active:scale-95 transition-all">
+                            class="col-span-2 bg-red-600 hover:bg-red-500 text-white font-black py-8 rounded-xl text-2xl active:scale-95 transition-all">
                         ← 刪除
                     </button>
                     <button @click="loginPwd += '0'"
-                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-xl text-xl active:scale-95 transition-all">
+                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-8 rounded-xl text-4xl active:scale-95 transition-all">
                         0
                     </button>
                 </div>
