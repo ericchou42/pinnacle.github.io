@@ -337,17 +337,56 @@
 
                 <!-- 支付方式統計 -->
                 <div class="card p-6">
-                    <h3 class="font-black text-slate-800 mb-4 text-sm">💳 支付方式統計</h3>
-                    <div v-if="paymentStats.length === 0" class="text-center py-6 text-slate-300 text-xs">尚無支出記錄</div>
-                    <div v-else class="space-y-3">
-                        <div v-for="stat in paymentStats" :key="stat.id" class="flex items-center gap-3">
-                            <span class="text-xs font-bold text-slate-600 w-16 flex-shrink-0 truncate">{{ stat.name }}</span>
-                            <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="progress-bar h-full bg-slate-400 rounded-full"
-                                     :style="{ width: stat.percent + '%' }">
-                                </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-black text-slate-800 text-sm">💳 支付方式統計</h3>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-3 py-1 rounded-lg" v-if="paymentStats.length > 0">
+                            共 {{ paymentStats.reduce((s,p) => s + p.count, 0) }} 筆
+                        </span>
+                    </div>
+                    <div v-if="paymentStats.length === 0" class="text-center py-8 text-slate-300">
+                        <p class="text-3xl mb-2">💳</p>
+                        <p class="text-xs font-bold">尚無支出記錄</p>
+                    </div>
+                    <div v-else class="space-y-4">
+                        <!-- 統計摘要 -->
+                        <div class="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl">
+                            <div class="text-center">
+                                <p class="text-[9px] text-slate-400 font-bold">最常使用</p>
+                                <p class="text-[11px] font-black text-slate-700 mt-0.5">{{ paymentStats[0]?.icon }} {{ paymentStats[0]?.name || '-' }}</p>
                             </div>
-                            <span class="text-[10px] font-black text-slate-500 num-font w-16 text-right">${{ stat.amount.toLocaleString() }}</span>
+                            <div class="text-center border-l border-r border-slate-200">
+                                <p class="text-[9px] text-slate-400 font-bold">總金額</p>
+                                <p class="text-[11px] font-black text-slate-700 mt-0.5 num-font">${{ paymentStats.reduce((s,p) => s + p.amount, 0).toLocaleString() }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[9px] text-slate-400 font-bold">平均次數</p>
+                                <p class="text-[11px] font-black text-slate-700 mt-0.5">{{ (paymentStats.reduce((s,p) => s + p.count, 0) / paymentStats.length).toFixed(1) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- 詳細列表 -->
+                        <div class="space-y-3">
+                            <div v-for="(stat, idx) in paymentStats" :key="stat.id" class="group hover:bg-slate-50 p-2 rounded-lg transition-all">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span :class="['w-2.5 h-2.5 rounded-full flex-shrink-0', stat.color]"></span>
+                                        <span class="text-sm font-black">{{ stat.icon }}</span>
+                                        <span class="text-xs font-bold text-slate-700 truncate">{{ stat.name }}</span>
+                                        <span class="text-[9px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded whitespace-nowrap">{{ stat.count }} 筆</span>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <span class="text-[10px] font-black text-slate-800 num-font block">${{ stat.amount.toLocaleString() }}</span>
+                                        <span class="text-[9px] text-slate-400 font-bold">{{ stat.percent }}%</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-sm">
+                                    <div class="progress-bar h-full rounded-full transition-all duration-500"
+                                         :class="stat.color"
+                                         :style="{ width: stat.percent + '%' }">
+                                    </div>
+                                </div>
+                                <p class="text-[9px] text-slate-400 mt-1 font-medium">平均 ${{ (stat.amount / stat.count).toLocaleString('zh-TW', {maximumFractionDigits: 0}) }} / 筆</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -791,17 +830,46 @@ createApp({
             const total = filteredExpenses.value.reduce((s,e) => s + e.amount, 0);
             if (total === 0) return [];
             const map = {};
+            const countMap = {};
             filteredExpenses.value.forEach(e => {
                 if (!map[e.paymentMethodId]) map[e.paymentMethodId] = 0;
+                if (!countMap[e.paymentMethodId]) countMap[e.paymentMethodId] = 0;
                 map[e.paymentMethodId] += e.amount;
+                countMap[e.paymentMethodId]++;
             });
+
+            // 支付方式配置 (顏色 + 圖示)
+            const paymentConfig = {
+                '現金': { color: 'bg-emerald-500', icon: '💵' },
+                '信用卡': { color: 'bg-blue-500', icon: '💳' },
+                'LINE Pay': { color: 'bg-green-500', icon: '📱' },
+                'Apple Pay': { color: 'bg-slate-900', icon: '🍎' },
+                'Google Pay': { color: 'bg-purple-500', icon: '🔵' },
+                '銀行轉帳': { color: 'bg-cyan-500', icon: '🏦' },
+                '行動支付': { color: 'bg-indigo-500', icon: '📲' },
+                'EasyCard': { color: 'bg-orange-500', icon: '🎫' },
+                '悠遊卡': { color: 'bg-amber-500', icon: '🎫' },
+                '街口': { color: 'bg-rose-500', icon: '🔵' },
+                'KOKO': { color: 'bg-lime-500', icon: '🟢' },
+                '台灣Pay': { color: 'bg-red-500', icon: '🇹🇼' },
+                '支付寶': { color: 'bg-yellow-500', icon: '🟡' },
+                'WeChat Pay': { color: 'bg-teal-500', icon: '💚' },
+            };
+
             return Object.entries(map)
-                .map(([id, amount]) => ({
-                    id,
-                    name: resolvePaymentName(id),
-                    amount,
-                    percent: Math.round((amount / total) * 100)
-                }))
+                .map(([id, amount]) => {
+                    const name = resolvePaymentName(id);
+                    const config = paymentConfig[name] || { color: 'bg-slate-400', icon: '💰' };
+                    return {
+                        id,
+                        name,
+                        amount,
+                        count: countMap[id],
+                        percent: Math.round((amount / total) * 100),
+                        color: config.color,
+                        icon: config.icon
+                    };
+                })
                 .sort((a, b) => b.amount - a.amount);
         });
 
