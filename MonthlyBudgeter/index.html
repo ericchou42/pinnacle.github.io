@@ -55,77 +55,107 @@
                 padding: 0 8px;
             }
             
-            /* 登錄頁面優化 */
+            /* 登錄容器主優化 */
+            .login-container {
+                padding: 0.5rem !important;
+                overflow-y: auto;
+                max-height: 100vh;
+            }
+            
             .login-container > div {
-                gap: 1.25rem !important;
+                gap: 0.75rem !important;
             }
             
             .login-container .text-center.text-white {
-                margin-bottom: 1.5rem !important;
+                margin-bottom: 0.75rem !important;
             }
             
             .login-container .w-16 {
-                width: 3rem !important;
-                height: 3rem !important;
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+            }
+            
+            .login-container .text-2xl {
+                font-size: 1.25rem !important;
             }
             
             .login-container .text-3xl {
-                font-size: 1.75rem !important;
+                font-size: 1.5rem !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .login-container .text-xs {
+                font-size: 0.7rem !important;
+                margin-top: 0.25rem !important;
+            }
+            
+            .login-container .text-\[10px\] {
+                font-size: 0.7rem !important;
+                margin-top: 0.25rem !important;
             }
             
             /* 密碼顯示框優化 */
+            .login-container > div > div:nth-child(2) {
+                margin: 0 !important;
+            }
+            
             .login-container .inline-block {
-                padding-left: 1.5rem !important;
-                padding-right: 1.5rem !important;
-                padding-top: 1rem !important;
-                padding-bottom: 1rem !important;
+                padding: 0.5rem !important;
+                border-radius: 1rem !important;
             }
             
             .login-container .text-6xl {
-                font-size: 2.5rem !important;
-                min-height: 4rem !important;
+                font-size: 2rem !important;
+                min-height: 3rem !important;
+                letter-spacing: 0.05em !important;
             }
             
             /* 數字鍵盤優化 */
-            .login-container .bg-slate-800 {
-                padding: 1rem !important;
-                gap: 0.5rem !important;
+            .login-container > div > div:nth-child(3) {
+                padding: 0.5rem !important;
+                border-radius: 1rem !important;
+                gap: 0.35rem !important;
             }
             
             .login-container .grid-cols-3 {
-                gap: 0.5rem !important;
+                gap: 0.35rem !important;
             }
             
             .login-container .grid-cols-3 > button {
-                padding-top: 1rem !important;
-                padding-bottom: 1rem !important;
-                font-size: 1.875rem !important;
+                padding: 0.6rem !important;
+                border-radius: 0.75rem !important;
+                font-size: 1.25rem !important;
+                font-weight: 900;
+                min-height: auto;
             }
             
             .login-container .col-span-2 {
-                font-size: 1rem !important;
+                font-size: 0.8rem !important;
             }
             
             /* 進入系統按鈕優化 */
-            .login-container > div > button {
-                padding-top: 1rem !important;
-                padding-bottom: 1rem !important;
-                font-size: 0.875rem !important;
+            .login-container > div > button:last-child {
+                padding: 0.75rem !important;
+                font-size: 0.8rem !important;
+                border-radius: 1rem !important;
+                margin-top: 0.5rem !important;
             }
         }
         
         /* 超級小屏幕 (小於 375px) */
         @media (max-width: 370px) {
             .login-container .text-6xl {
-                font-size: 2rem !important;
-                min-height: 3.5rem !important;
-                letter-spacing: 0.1em !important;
+                font-size: 1.75rem !important;
+                min-height: 2.75rem !important;
             }
             
             .login-container .grid-cols-3 > button {
-                padding-top: 0.75rem !important;
-                padding-bottom: 0.75rem !important;
-                font-size: 1.5rem !important;
+                padding: 0.5rem !important;
+                font-size: 1.1rem !important;
+            }
+            
+            .login-container .text-3xl {
+                font-size: 1.25rem !important;
             }
         }
     </style>
