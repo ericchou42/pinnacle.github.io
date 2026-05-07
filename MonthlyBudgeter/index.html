@@ -135,10 +135,13 @@
             
             /* 進入系統按鈕優化 */
             .login-container > div > button:last-child {
-                padding: 0.75rem !important;
-                font-size: 0.8rem !important;
+                padding: 1.2rem !important;
+                font-size: 1rem !important;
                 border-radius: 1rem !important;
-                margin-top: 0.5rem !important;
+                margin-top: 1rem !important;
+                font-weight: 900 !important;
+                min-height: 3rem !important;
+                width: 100% !important;
             }
         }
         
@@ -156,6 +159,13 @@
             
             .login-container .text-3xl {
                 font-size: 1.25rem !important;
+            }
+            
+            /* 超小屏幕按鈕進一步放大 */
+            .login-container > div > button:last-child {
+                padding: 1rem !important;
+                font-size: 0.95rem !important;
+                min-height: 2.8rem !important;
             }
         }
     </style>
