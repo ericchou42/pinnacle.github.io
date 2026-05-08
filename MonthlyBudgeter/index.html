@@ -283,7 +283,16 @@
                         </div>
                     </div>
                     <form @submit.prevent="addExpense" class="space-y-3">
-                        <input type="date" v-model="expenseForm.date" class="w-full border border-slate-200 rounded-2xl p-4 text-sm bg-slate-50" required>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-2">
+                                <label class="text-xs text-slate-500 font-semibold">消費日期</label>
+                                <input type="date" v-model="expenseForm.date" class="w-full border border-slate-200 rounded-2xl p-3 text-sm bg-slate-50" required>
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500 font-semibold">到帳天數</label>
+                                <input type="number" v-model.number="expenseForm.daysDifference" min="0" max="30" class="w-full border border-slate-200 rounded-2xl p-3 text-sm bg-slate-50" required>
+                            </div>
+                        </div>
                         <input type="text" v-model="expenseForm.title" placeholder="消費內容..." class="w-full border border-slate-200 rounded-2xl p-4 text-sm" required>
                         <div class="grid grid-cols-2 gap-3">
                             <select v-model="expenseForm.categoryId" class="border border-slate-200 rounded-2xl p-4 text-sm bg-slate-50" required>
@@ -894,7 +903,16 @@
                         <h3 class="font-black text-slate-800">編輯支出</h3>
                         <button @click="editingExpense = null" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold flex items-center justify-center">✕</button>
                     </div>
-                    <input type="date" v-model="editingExpense.date" class="w-full border border-slate-200 rounded-2xl p-4 text-sm bg-slate-50">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="text-xs text-slate-500 font-semibold">消費日期</label>
+                            <input type="date" v-model="editingExpense.date" class="w-full border border-slate-200 rounded-2xl p-3 text-sm bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 font-semibold">到帳天數</label>
+                            <input type="number" v-model.number="editingExpense.daysDifference" min="0" max="30" class="w-full border border-slate-200 rounded-2xl p-3 text-sm bg-slate-50">
+                        </div>
+                    </div>
                     <input type="text" v-model="editingExpense.title" placeholder="消費內容" class="w-full border border-slate-200 rounded-2xl p-4 text-sm">
                     <div class="grid grid-cols-2 gap-3">
                         <select v-model="editingExpense.categoryId" class="border border-slate-200 rounded-2xl p-4 text-sm bg-slate-50">
@@ -995,7 +1013,7 @@ createApp({
         const creditCards = ref([]);
         const config = ref({ password: '1234' });
 
-        const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', categoryId: '', paymentMethodId: '', amount: null, scope: 'personal', installment: { enabled: false, count: 2, rate: 0 } });
+        const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', categoryId: '', paymentMethodId: '', amount: null, scope: 'personal', daysDifference: 2, installment: { enabled: false, count: 2, rate: 0 } });
         const budgetForm = ref({ categoryId: '', amount: null, scope: 'personal' });
         const creditCardForm = ref({ cardName: '', statementDate: '', paymentDueDate: '', currentBillAmount: null, creditLimit: null });
         const newItemName = ref({ cat: '', pm: '' });
@@ -1470,7 +1488,17 @@ createApp({
         const openEditExpense = (e) => { editingExpense.value = { ...e }; };
         const saveEditExpense = () => {
             const idx = expenses.value.findIndex(e => e.id === editingExpense.value.id);
-            if (idx !== -1) expenses.value[idx] = { ...editingExpense.value };
+            if (idx !== -1) {
+                // 重新計算到帳日期
+                const expenseDate = new Date(editingExpense.value.date);
+                const settlementDate = new Date(expenseDate);
+                settlementDate.setDate(settlementDate.getDate() + (editingExpense.value.daysDifference || 2));
+                const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+                
+                // 更新到帳日期
+                editingExpense.value.settlementDate = settlementDateStr;
+                expenses.value[idx] = { ...editingExpense.value };
+            }
             editingExpense.value = null;
         };
 
@@ -1559,11 +1587,17 @@ createApp({
                 periodDate.setMonth(periodDate.getMonth() + (i - 1));
                 const periodDateStr = periodDate.toISOString().slice(0, 10);
 
+                // 為每期重新計算到帳日期
+                const settlementDate = new Date(periodDateStr);
+                settlementDate.setDate(settlementDate.getDate() + (expense.daysDifference || 2));
+                const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+
                 const recordAmount = i === 1 ? preview.first : preview.monthly;
                 records.push({
                     ...expense,
                     id: groupId * 1000 + i,
                     date: periodDateStr,
+                    settlementDate: settlementDateStr,
                     amount: recordAmount,
                     installmentInfo: {
                         groupId,
@@ -1581,59 +1615,66 @@ createApp({
             return records;
         };
 
-        // 檢查並自動建檔應到期的分期消費
+        // 檢查並自動建檔應到期的分期消費（聰明設計：自動補充所有缺失期次）
         const checkAndCreateInstallmentDueExpenses = () => {
-            const today = new Date().toISOString().slice(0, 10);
             const processedGroupIds = new Set();
 
             expenses.value.forEach(exp => {
                 if (!exp.installmentInfo || processedGroupIds.has(exp.installmentInfo.groupId)) return;
                 processedGroupIds.add(exp.installmentInfo.groupId);
 
-                const { groupId, count, originalDate, periodNumber } = exp.installmentInfo;
+                const { groupId, count, originalDate, rate, totalAmount } = exp.installmentInfo;
+                const { title, categoryId, paymentMethodId, scope, user, daysDifference } = exp;
                 
-                // 計算每一期應該建檔的日期
-                for (let i = periodNumber + 1; i <= count; i++) {
-                    // 檢查該期是否已存在
-                    const periodExists = expenses.value.some(e => 
-                        e.installmentInfo?.groupId === groupId && 
-                        e.installmentInfo?.periodNumber === i
-                    );
-                    
-                    if (periodExists) continue;
+                // 找出該分期組已存在的所有期次
+                const existingPeriods = new Set();
+                expenses.value.forEach(e => {
+                    if (e.installmentInfo?.groupId === groupId) {
+                        existingPeriods.add(e.installmentInfo.periodNumber);
+                    }
+                });
+
+                // 檢查所有期次（1 到 count），補充所有缺失的期次
+                for (let i = 1; i <= count; i++) {
+                    if (existingPeriods.has(i)) continue; // 該期已存在，跳過
 
                     // 計算該期應建檔日期
                     const nextDate = new Date(originalDate);
                     nextDate.setMonth(nextDate.getMonth() + (i - 1));
                     const nextDateStr = nextDate.toISOString().slice(0, 10);
 
-                    // 若應建檔日期 <= 今日，建立該期記錄
-                    if (nextDateStr <= today) {
-                        const preview = calculateInstallmentPreview(exp.installmentInfo.totalAmount, count, exp.installmentInfo.rate);
-                        const amount = i === 1 ? preview.first : preview.monthly;
+                    // 計算該期到帳日期
+                    const settlementDate = new Date(nextDateStr);
+                    settlementDate.setDate(settlementDate.getDate() + (daysDifference || 2));
+                    const settlementDateStr = settlementDate.toISOString().slice(0, 10);
 
-                        expenses.value.push({
-                            id: groupId * 1000 + i,
-                            date: nextDateStr,
-                            title: exp.title,
-                            categoryId: exp.categoryId,
-                            paymentMethodId: exp.paymentMethodId,
-                            amount,
-                            scope: exp.scope,
-                            user: exp.user,
-                            installmentInfo: {
-                                groupId,
-                                totalAmount: exp.installmentInfo.totalAmount,
-                                rate: exp.installmentInfo.rate,
-                                count,
-                                monthlyAmount: preview.monthly,
-                                firstAmount: preview.first,
-                                periodNumber: i,
-                                originalDate: exp.installmentInfo.originalDate,
-                                createdAt: new Date().toISOString()
-                            }
-                        });
-                    }
+                    // 直接建檔所有缺失的期次（聰明的設計：無需等待日期到達）
+                    const preview = calculateInstallmentPreview(totalAmount, count, rate);
+                    const amount = i === 1 ? preview.first : preview.monthly;
+
+                    expenses.value.push({
+                        id: groupId * 1000 + i,
+                        date: nextDateStr,
+                        settlementDate: settlementDateStr,
+                        title: title,
+                        categoryId: categoryId,
+                        paymentMethodId: paymentMethodId,
+                        amount,
+                        scope: scope,
+                        user: user,
+                        daysDifference: daysDifference || 2,
+                        installmentInfo: {
+                            groupId,
+                            totalAmount: totalAmount,
+                            rate: rate,
+                            count,
+                            monthlyAmount: preview.monthly,
+                            firstAmount: preview.first,
+                            periodNumber: i,
+                            originalDate: originalDate,
+                            createdAt: new Date().toISOString()
+                        }
+                    });
                 }
             });
         };
@@ -1653,10 +1694,17 @@ createApp({
             addExpense: () => {
                 if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId || !expenseForm.value.amount) return;
                 
+                // 計算到帳日期
+                const expenseDate = new Date(expenseForm.value.date);
+                const settlementDate = new Date(expenseDate);
+                settlementDate.setDate(settlementDate.getDate() + (expenseForm.value.daysDifference || 2));
+                const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+                
                 const baseExpense = {
                     ...expenseForm.value,
                     id: Date.now(),
                     user: currentUser.value,
+                    settlementDate: settlementDateStr, // 添加到帳日期
                     installment: undefined // 移除表單的臨時分期字段
                 };
 
@@ -1666,8 +1714,8 @@ createApp({
                     const iRate = expenseForm.value.installment.rate || 0;
                     const records = createInstallmentRecords(baseExpense, iCount, iRate);
                     
-                    // 僅將第1期加入 expenses（後續期次由自動排程建檔）
-                    expenses.value.push(records[0]);
+                    // 立即加入所有期次的記錄（不再等待自動排程）
+                    records.forEach(record => expenses.value.push(record));
                 } else {
                     // 非分期消費，直接添加
                     expenses.value.push(baseExpense);
@@ -1677,6 +1725,7 @@ createApp({
                 expenseForm.value.title = '';
                 expenseForm.value.amount = null;
                 expenseForm.value.installment = { enabled: false, count: 2, rate: 0 };
+                expenseForm.value.daysDifference = 2;
             },
             addBudget: () => {
                 budgets.value.push({ ...budgetForm.value, id: Date.now(), user: currentUser.value, month: currentMonth.value });
@@ -1718,8 +1767,26 @@ createApp({
                 }
             },
             deleteItem: (type, id) => {
-                if (type === 'budgets') budgets.value = budgets.value.filter(i => i.id !== id);
-                else expenses.value = expenses.value.filter(i => i.id !== id);
+                if (type === 'budgets') {
+                    budgets.value = budgets.value.filter(i => i.id !== id);
+                } else {
+                    // 檢查是否為分期消費
+                    const expense = expenses.value.find(e => e.id === id);
+                    if (expense?.installmentInfo) {
+                        // 分期消費：提示刪除整個分期組
+                        const groupId = expense.installmentInfo.groupId;
+                        const count = expense.installmentInfo.count;
+                        const confirmed = confirm(`刪除此分期消費會刪除全部 ${count} 期，是否確認？`);
+                        
+                        if (confirmed) {
+                            // 刪除整個分期組
+                            expenses.value = expenses.value.filter(e => e.installmentInfo?.groupId !== groupId);
+                        }
+                    } else {
+                        // 非分期消費：直接刪除
+                        expenses.value = expenses.value.filter(i => i.id !== id);
+                    }
+                }
             },
             saveSavings: () => {
                 let t = savingsTargets.value.find(s => s.month === currentMonth.value);
