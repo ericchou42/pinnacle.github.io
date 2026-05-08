@@ -992,8 +992,8 @@ createApp({
         };
 
         const cleanupCreditCards = () => {
-            // 只保留属于当前用户的卡
-            creditCards.value = creditCards.value.filter(card => card.user === currentUser.value);
+            // 只在 Vue 中显示属于当前用户的卡，但不修改原始数组（避免触发 watch）
+            // 这是通过计算属性 userCreditCards 实现的，此函数已弃用
         };
 
         const loadData = async () => {
@@ -1018,7 +1018,7 @@ createApp({
                 if (restored) alert('⚠️ 無法連線至雲端，已從本機備份還原資料。');
                 else alert('⚠️ 無法連線至雲端，且無本機備份。');
             } finally {
-                cleanupCreditCards();
+                // 不再在這裡清理卡片，使用 userCreditCards 計算屬性隱藏其他用戶的卡
                 isLoading = false;
                 isDataLoaded.value = true;
             }
