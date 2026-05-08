@@ -1238,7 +1238,9 @@ createApp({
         };
 
         // ===== 信用卡帳單自動計算 =====
-        // 計算信用卡本期的帳單金額（從結帳日期到下月結帳日期之間的支出）
+        // 計算信用卡本期的帳單金額（根據入帳日計算）
+        // 入帳日 = 消費日期 + 2天
+        // 帳單周期：上月結帳日+2天 到 本月結帳日+2天（含）
         // 支持指定參考日期（用於查看歷史月份）
         const calculateCreditCardBill = (card, referenceDate = null) => {
             if (!card || !card.statementDate) return 0;
@@ -1253,28 +1255,29 @@ createApp({
             
             let startDate, endDate;
             
-            // 判斷本期計費周期的開始和結束日期
+            // 判斷本期計費周期的開始和結束日期（基於入帳日）
             if (currentDay < statementDay) {
-                // 今天在結帳日之前，本期開始於上月的結帳日
+                // 今天在結帳日之前，本期開始於上月的結帳日+2天
                 const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
                 const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-                startDate = new Date(prevYear, prevMonth - 1, statementDay);
-                endDate = new Date(currentYear, currentMonth - 1, statementDay);
+                startDate = new Date(prevYear, prevMonth - 1, statementDay + 2);
+                endDate = new Date(currentYear, currentMonth - 1, statementDay + 2);
             } else {
-                // 今天在結帳日之後（含結帳日當天），本期開始於本月的結帳日
-                startDate = new Date(currentYear, currentMonth - 1, statementDay);
+                // 今天在結帳日之後（含結帳日當天），本期開始於本月的結帳日+2天
+                startDate = new Date(currentYear, currentMonth - 1, statementDay + 2);
                 const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
                 const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-                endDate = new Date(nextYear, nextMonth - 1, statementDay);
+                endDate = new Date(nextYear, nextMonth - 1, statementDay + 2);
             }
             
-            // 計算該周期內用該卡的所有支出
+            // 計算該周期內用該卡的所有支出（根據入帳日，即消費日期+2天）
             const cardId = card.id;
             const billExpenses = expenses.value.filter(e => {
                 const expenseDate = new Date(e.date);
+                const statementDateInAccount = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate() + 2);
                 return e.paymentMethodId === `card_${cardId}` &&
-                       expenseDate >= startDate &&
-                       expenseDate < endDate;
+                       statementDateInAccount >= startDate &&
+                       statementDateInAccount <= endDate;
             });
             
             return billExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
