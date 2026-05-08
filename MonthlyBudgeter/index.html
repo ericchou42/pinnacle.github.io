@@ -643,26 +643,55 @@
 
                         <!-- 詳細列表 -->
                         <div class="space-y-3">
-                            <div v-for="(stat, idx) in paymentStats" :key="stat.id" class="group hover:bg-slate-50 p-2 rounded-lg transition-all">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <span :class="['w-2.5 h-2.5 rounded-full flex-shrink-0', stat.color]"></span>
+                            <div v-for="(stat, idx) in paymentStats" :key="stat.id" class="border border-slate-100 rounded-lg overflow-hidden">
+                                <!-- 支付方式標題 -->
+                                <div @click="expandedPaymentMethodId = expandedPaymentMethodId === stat.id ? null : stat.id"
+                                     class="cursor-pointer hover:bg-blue-50 p-3 transition-all flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <span :class="['text-sm transition-transform', expandedPaymentMethodId === stat.id ? 'transform rotate-90' : '']">▶</span>
                                         <span class="text-sm font-black">{{ stat.icon }}</span>
-                                        <span class="text-xs font-bold text-slate-700 truncate">{{ stat.name }}</span>
-                                        <span class="text-[9px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded whitespace-nowrap">{{ stat.count }} 筆</span>
+                                        <span class="text-xs font-bold text-slate-700">{{ stat.name }}</span>
+                                        <span class="text-[9px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded">{{ stat.count }} 筆</span>
                                     </div>
                                     <div class="text-right flex-shrink-0">
                                         <span class="text-[10px] font-black text-slate-800 num-font block">${{ stat.amount.toLocaleString() }}</span>
                                         <span class="text-[9px] text-slate-400 font-bold">{{ stat.percent }}%</span>
                                     </div>
                                 </div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-sm">
-                                    <div class="progress-bar h-full rounded-full transition-all duration-500"
-                                         :class="stat.color"
-                                         :style="{ width: stat.percent + '%' }">
+                                
+                                <!-- 進度條 -->
+                                <div class="px-3 pb-3">
+                                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-sm">
+                                        <div class="progress-bar h-full rounded-full transition-all duration-500"
+                                             :class="stat.color"
+                                             :style="{ width: stat.percent + '%' }">
+                                        </div>
                                     </div>
+                                    <p class="text-[9px] text-slate-400 text-right mt-1 font-medium">平均 ${{ (stat.amount / stat.count).toLocaleString('zh-TW', {maximumFractionDigits: 0}) }} / 筆</p>
                                 </div>
-                                <p class="text-[9px] text-slate-400 mt-1 font-medium">平均 ${{ (stat.amount / stat.count).toLocaleString('zh-TW', {maximumFractionDigits: 0}) }} / 筆</p>
+
+                                <!-- 展開的支出項目 -->
+                                <transition name="slide">
+                                    <div v-if="expandedPaymentMethodId === stat.id" class="bg-blue-50 border-t border-slate-100 divide-y divide-slate-100">
+                                        <div v-for="expense in getPaymentMethodExpenses(stat.id)" :key="expense.id"
+                                             class="p-3 flex justify-between items-start gap-3 hover:bg-blue-100 transition-all">
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-[11px] font-bold text-slate-700">{{ expense.title }}</p>
+                                                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                                    <span class="text-[9px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold">{{ expense.date }}</span>
+                                                    <span :class="['text-[9px] font-bold px-2 py-0.5 rounded', expense.scope === 'personal' ? 'bg-purple-200 text-purple-700' : 'bg-blue-200 text-blue-700']">
+                                                        {{ expense.scope === 'personal' ? '👤 個人' : '🏢 共同' }}
+                                                    </span>
+                                                    <span class="text-[9px] bg-white text-slate-500 px-2 py-0.5 rounded">{{ categories.find(c => c.id === expense.categoryId)?.name || '-' }}</span>
+                                                </div>
+                                            </div>
+                                            <span class="text-[11px] font-black text-slate-800 num-font flex-shrink-0">${{ expense.amount.toLocaleString() }}</span>
+                                        </div>
+                                        <div v-if="getPaymentMethodExpenses(stat.id).length === 0" class="p-3 text-center text-slate-400 text-[10px]">
+                                            暫無支出項目
+                                        </div>
+                                    </div>
+                                </transition>
                             </div>
                         </div>
                     </div>
@@ -1021,6 +1050,7 @@ createApp({
         const editingExpense = ref(null);
         const editingCreditCard = ref(null);
         const expandedCategoryId = ref(null);
+        const expandedPaymentMethodId = ref(null);
 
         // ===== 資料載入 =====
         let isLoading = false;
@@ -1309,6 +1339,15 @@ createApp({
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
         };
 
+        // 獲取特定支付方式的支出項目
+        const getPaymentMethodExpenses = (paymentMethodId) => {
+            const expenseSource = currentUser.value === 'Eric' ? 
+                allMonthExpenses.value.filter(e => e.user === 'Eric') :
+                allMonthExpenses.value.filter(e => e.user === 'Livia');
+            return expenseSource.filter(e => String(e.paymentMethodId) === String(paymentMethodId))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        };
+
         // ===== 信用卡帳單自動計算 =====
         // 計算信用卡本期的帳單金額（根據入帳日計算）
         // 入帳日 = 消費日期 + 2天
@@ -1328,25 +1367,27 @@ createApp({
             let startDate, endDate;
             
             // 判斷本期計費周期的開始和結束日期（基於入帳日）
-            if (currentDay < statementDay) {
-                // 今天在結帳日之前，本期開始於上月的結帳日+2天
+            // 如果當前日期 <= 結帳日，顯示本月的帳單（上月結帳日+1天 到 本月結帳日）
+            // 如果當前日期 > 結帳日，顯示下月的帳單（本月結帳日+1天 到 下月結帳日）
+            if (currentDay <= statementDay) {
+                // 在結帳日之前或結帳日當天，本期包含：上月結帳日+1天 到 本月結帳日
                 const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
                 const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-                startDate = new Date(prevYear, prevMonth - 1, statementDay + 2);
-                endDate = new Date(currentYear, currentMonth - 1, statementDay + 2);
+                startDate = new Date(prevYear, prevMonth - 1, statementDay + 1);
+                endDate = new Date(currentYear, currentMonth - 1, statementDay);
             } else {
-                // 今天在結帳日之後（含結帳日當天），本期開始於本月的結帳日+2天
-                startDate = new Date(currentYear, currentMonth - 1, statementDay + 2);
+                // 在結帳日之後，本期包含：本月結帳日+1天 到 下月結帳日
+                startDate = new Date(currentYear, currentMonth - 1, statementDay + 1);
                 const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
                 const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-                endDate = new Date(nextYear, nextMonth - 1, statementDay + 2);
+                endDate = new Date(nextYear, nextMonth - 1, statementDay);
             }
             
-            // 計算該周期內用該卡的所有支出（根據入帳日，即消費日期+2天）
+            // 計算該周期內用該卡的所有支出（根據入帳日，即消費日期+1天）
             const cardId = card.id;
             const billExpenses = expenses.value.filter(e => {
                 const expenseDate = new Date(e.date);
-                const statementDateInAccount = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate() + 2);
+                const statementDateInAccount = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate() + 1);
                 return e.paymentMethodId === `card_${cardId}` &&
                        statementDateInAccount >= startDate &&
                        statementDateInAccount <= endDate;
@@ -1688,15 +1729,15 @@ createApp({
 
         return {
             currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
-            expenseForm, budgetForm, creditCardForm, newItemName, editingExpense, editingCreditCard, expandedCategoryId,
-            groupedExpenses, userCategories, userPaymentMethods, displayPaymentOptions, filteredBudgets,
+            expenseForm, budgetForm, creditCardForm, newItemName, editingExpense, editingCreditCard, expandedCategoryId, expandedPaymentMethodId,
+            groupedExpenses, userCategories, userPaymentMethods, displayPaymentOptions, filteredBudgets, categories,
             currentSavingsTarget, scopedBudget, scopedExpense, scopedReport, paymentStats,
             userCreditCards, totalCreditCardBills, creditCardAvgUsage,
             handleLogin, changePassword, changeMonth,
             openEditExpense, saveEditExpense,
             addCreditCard, openEditCreditCard, saveCreditCardEdit, confirmDeleteCreditCard, deleteCreditCard, calculateDaysUntilDueDate, calculateCreditCardBill, getReferenceDateForMonth,
             snapshotKeys, downloadSnapshot,
-            exportBackupManual, importBackup, getCategoryExpenses,
+            exportBackupManual, importBackup, getCategoryExpenses, getPaymentMethodExpenses,
             isPaymentMethodCreditCard, calculateInstallmentPreview, checkAndCreateInstallmentDueExpenses,
             addExpense: () => {
                 if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId || !expenseForm.value.amount) return;
