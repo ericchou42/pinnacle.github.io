@@ -549,6 +549,75 @@
                     </div>
                 </div>
 
+                <!-- 共同支出用戶分析 -->
+                <div class="card p-6 border-t-4 border-emerald-500">
+                    <h3 class="font-black text-slate-800 mb-1 text-sm">👥 共同支出用戶分析</h3>
+                    <p class="text-[10px] text-slate-400 mb-5">本月各用戶在共同支出的分配情況</p>
+                    <div class="space-y-3">
+                        <div v-for="userStat in getCommonExpensesByUser()" :key="userStat.user" class="border border-slate-100 rounded-lg overflow-hidden">
+                            <!-- 用戶統計頭 -->
+                            <div @click="expandedCommonUserName = expandedCommonUserName === userStat.user ? null : userStat.user"
+                                 class="cursor-pointer p-4 flex justify-between items-center transition-all"
+                                 :class="userStat.user === 'Eric' ? 'bg-blue-50 hover:bg-blue-100' : 'bg-purple-50 hover:bg-purple-100'">
+                                <div class="flex items-center gap-3">
+                                    <span :class="['text-lg font-black transition-transform', expandedCommonUserName === userStat.user ? 'transform rotate-90' : '']">▶</span>
+                                    <span :class="['text-lg font-black', userStat.user === 'Eric' ? 'text-blue-600' : 'text-purple-600']">
+                                        {{ userStat.user === 'Eric' ? '👨' : '👩' }}
+                                    </span>
+                                    <div>
+                                        <p :class="['text-xs font-black', userStat.user === 'Eric' ? 'text-blue-700' : 'text-purple-700']">
+                                            {{ userStat.user }}
+                                        </p>
+                                        <p class="text-[9px] text-slate-500">{{ userStat.count }} 筆交易</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p :class="['text-base font-black num-font', userStat.user === 'Eric' ? 'text-blue-600' : 'text-purple-600']">
+                                        ${{ userStat.amount.toLocaleString() }}
+                                    </p>
+                                    <p class="text-[9px] text-slate-400 mt-1">
+                                        平均 ${{ userStat.count > 0 ? (userStat.amount / userStat.count).toLocaleString('zh-TW', {maximumFractionDigits: 0}) : '0' }} / 筆
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- 進度條 -->
+                            <div class="px-4 pb-3 pt-2">
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="progress-bar h-full rounded-full"
+                                         :class="userStat.user === 'Eric' ? 'bg-blue-400' : 'bg-purple-400'"
+                                         :style="{ width: scopedExpense('common') > 0 ? ((userStat.amount / scopedExpense('common')) * 100) + '%' : '0%' }">
+                                    </div>
+                                </div>
+                                <p class="text-[9px] text-slate-400 text-right mt-1 num-font">
+                                    {{ scopedExpense('common') > 0 ? ((userStat.amount / scopedExpense('common')) * 100).toFixed(1) : '0' }}% 佔比
+                                </p>
+                            </div>
+                            
+                            <!-- 展開的支出項目 -->
+                            <transition name="slide">
+                                <div v-if="expandedCommonUserName === userStat.user" :class="['border-t border-slate-100 divide-y divide-slate-100', userStat.user === 'Eric' ? 'bg-blue-50' : 'bg-purple-50']">
+                                    <div v-for="expense in getCommonUserExpenses(userStat.user)" :key="expense.id"
+                                         class="p-3 flex justify-between items-start gap-3 transition-all"
+                                         :class="userStat.user === 'Eric' ? 'hover:bg-blue-100' : 'hover:bg-purple-100'">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[11px] font-bold text-slate-700">{{ expense.title }}</p>
+                                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                                <span class="text-[9px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold">{{ expense.date }}</span>
+                                                <span class="text-[9px] bg-white text-slate-500 px-2 py-0.5 rounded">{{ categories.find(c => c.id === expense.categoryId)?.name || '-' }}</span>
+                                                <span class="text-[9px] bg-white text-slate-500 px-2 py-0.5 rounded">{{ resolvePaymentName(expense.paymentMethodId) }}</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[11px] font-black text-slate-800 num-font flex-shrink-0">${{ expense.amount.toLocaleString() }}</span>
+                                    </div>
+                                    <div v-if="getCommonUserExpenses(userStat.user).length === 0" class="p-3 text-center text-slate-400 text-[10px]">
+                                        暫無支出項目
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 個人分析 -->
                 <div class="card p-6 border-t-4 border-purple-500">
                     <h3 class="font-black text-slate-800 mb-1 text-sm">👤 個人支出分析</h3>
@@ -1051,6 +1120,7 @@ createApp({
         const editingCreditCard = ref(null);
         const expandedCategoryId = ref(null);
         const expandedPaymentMethodId = ref(null);
+        const expandedCommonUserName = ref(null);
 
         // ===== 資料載入 =====
         let isLoading = false;
@@ -1345,6 +1415,24 @@ createApp({
                 allMonthExpenses.value.filter(e => e.user === 'Eric') :
                 allMonthExpenses.value.filter(e => e.user === 'Livia');
             return expenseSource.filter(e => String(e.paymentMethodId) === String(paymentMethodId))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        };
+
+        // 獲取共同支出中每個用戶的支出統計
+        const getCommonExpensesByUser = () => {
+            const commonExpenses = allMonthExpenses.value.filter(e => e.scope === 'common');
+            const ericExpense = commonExpenses.filter(e => e.user === 'Eric').reduce((sum, e) => sum + e.amount, 0);
+            const liviaExpense = commonExpenses.filter(e => e.user === 'Livia').reduce((sum, e) => sum + e.amount, 0);
+            return [
+                { user: 'Eric', amount: ericExpense, count: commonExpenses.filter(e => e.user === 'Eric').length, color: 'bg-blue-200 text-blue-700' },
+                { user: 'Livia', amount: liviaExpense, count: commonExpenses.filter(e => e.user === 'Livia').length, color: 'bg-purple-200 text-purple-700' }
+            ];
+        };
+
+        // 獲取特定用戶的共同支出項目
+        const getCommonUserExpenses = (userName) => {
+            return allMonthExpenses.value
+                .filter(e => e.scope === 'common' && e.user === userName)
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
         };
 
@@ -1737,7 +1825,7 @@ createApp({
             openEditExpense, saveEditExpense,
             addCreditCard, openEditCreditCard, saveCreditCardEdit, confirmDeleteCreditCard, deleteCreditCard, calculateDaysUntilDueDate, calculateCreditCardBill, getReferenceDateForMonth,
             snapshotKeys, downloadSnapshot,
-            exportBackupManual, importBackup, getCategoryExpenses, getPaymentMethodExpenses,
+            exportBackupManual, importBackup, getCategoryExpenses, getPaymentMethodExpenses, getCommonExpensesByUser, getCommonUserExpenses, expandedCommonUserName,
             isPaymentMethodCreditCard, calculateInstallmentPreview, checkAndCreateInstallmentDueExpenses,
             addExpense: () => {
                 if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId || !expenseForm.value.amount) return;
