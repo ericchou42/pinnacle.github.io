@@ -300,6 +300,34 @@
                             <input type="number" v-model.number="expenseForm.amount" placeholder="0"
                                    class="w-full border border-slate-200 rounded-2xl p-4 pl-10 text-3xl font-black text-blue-600 bg-blue-50/30 num-font" required>
                         </div>
+                        <!-- 分期選項（僅信用卡可見） -->
+                        <transition name="slide">
+                            <div v-if="isPaymentMethodCreditCard(expenseForm.paymentMethodId)" class="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" v-model="expenseForm.installment.enabled" id="installmentEnabled" class="w-4 h-4 rounded cursor-pointer">
+                                    <label for="installmentEnabled" class="text-sm font-bold text-slate-700 cursor-pointer">💳 啟用分期付款</label>
+                                </div>
+                                <transition name="fade">
+                                    <div v-if="expenseForm.installment.enabled" class="space-y-3 pl-7">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">分期次數</label>
+                                                <input type="number" v-model.number="expenseForm.installment.count" min="2" max="24" class="w-full border border-slate-200 rounded-2xl p-2 text-sm">
+                                            </div>
+                                            <div>
+                                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest">利率 (%)</label>
+                                                <input type="number" v-model.number="expenseForm.installment.rate" min="0" step="0.1" class="w-full border border-slate-200 rounded-2xl p-2 text-sm">
+                                            </div>
+                                        </div>
+                                        <div class="bg-white rounded-xl p-3 border border-amber-100 text-[10px] space-y-1 text-slate-600">
+                                            <p><strong>總費用:</strong> ${{ calculateInstallmentPreview(expenseForm.amount, expenseForm.installment.count, expenseForm.installment.rate).total.toFixed(0) }}</p>
+                                            <p><strong>每期金額:</strong> ${{ calculateInstallmentPreview(expenseForm.amount, expenseForm.installment.count, expenseForm.installment.rate).monthly.toFixed(2) }}</p>
+                                            <p><strong>第1期:</strong> ${{ calculateInstallmentPreview(expenseForm.amount, expenseForm.installment.count, expenseForm.installment.rate).first.toFixed(2) }}</p>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </transition>
                         <button type="submit" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all text-sm">
                             ＋ 記錄花費
                         </button>
@@ -338,12 +366,15 @@
                                         <div :class="['w-1 h-10 rounded-full flex-shrink-0', e.scope === 'common' ? 'bg-blue-400' : 'bg-purple-400']"></div>
                                         <div>
                                             <p class="font-bold text-slate-700 text-sm">{{ e.title }}</p>
-                                            <div class="flex items-center gap-2 mt-0.5">
+                                            <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                                                 <span class="text-[9px] text-slate-400 font-bold">{{ resolveCategoryName(e.categoryId) }}</span>
                                                 <span :class="['scope-badge', e.scope === 'common' ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500']">
                                                     {{ e.scope === 'common' ? '共同' : '個人' }}
                                                 </span>
                                                 <span class="text-[9px] text-slate-300">{{ resolvePaymentName(e.paymentMethodId) }}</span>
+                                                <span v-if="e.installmentInfo" class="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">
+                                                    💳 第{{ e.installmentInfo.periodNumber }}/{{ e.installmentInfo.count }}期
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -880,6 +911,16 @@
                                 :class="['flex-1 py-2 rounded-lg transition-all', editingExpense.scope === 'common' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400']">🏢 共同</button>
                     </div>
                     <input type="number" v-model.number="editingExpense.amount" class="w-full border border-slate-200 rounded-2xl p-4 text-2xl font-black text-blue-600 num-font">
+                    <!-- 分期信息顯示 -->
+                    <div v-if="editingExpense.installmentInfo" class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">分期信息</p>
+                        <div class="space-y-1 text-[10px] text-slate-600">
+                            <p><strong>期次:</strong> 第{{ editingExpense.installmentInfo.periodNumber }}/{{ editingExpense.installmentInfo.count }}期</p>
+                            <p><strong>原始金額:</strong> ${{ editingExpense.installmentInfo.totalAmount.toLocaleString() }}</p>
+                            <p><strong>利率:</strong> {{ editingExpense.installmentInfo.rate }}%</p>
+                            <p v-if="editingExpense.installmentInfo.periodNumber === 1" class="text-amber-700 font-bold">⚠️ 編輯第1期會自動調整後續期次金額</p>
+                        </div>
+                    </div>
                     <button @click="saveEditExpense"
                             class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl active:scale-95 transition-all">
                         儲存變更
@@ -954,7 +995,7 @@ createApp({
         const creditCards = ref([]);
         const config = ref({ password: '1234' });
 
-        const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', categoryId: '', paymentMethodId: '', amount: null, scope: 'personal' });
+        const expenseForm = ref({ date: new Date().toISOString().slice(0, 10), title: '', categoryId: '', paymentMethodId: '', amount: null, scope: 'personal', installment: { enabled: false, count: 2, rate: 0 } });
         const budgetForm = ref({ categoryId: '', amount: null, scope: 'personal' });
         const creditCardForm = ref({ cardName: '', statementDate: '', paymentDueDate: '', currentBillAmount: null, creditLimit: null });
         const newItemName = ref({ cat: '', pm: '' });
@@ -1088,8 +1129,20 @@ createApp({
 
         setInterval(checkAndSaveSnapshot, 60000);
 
-        // 登入後立刻觸發一次快照檢查
-        watch(isLoggedIn, (v) => { if (v) setTimeout(checkAndSaveSnapshot, 1000); });
+        // 登入後立刻觸發一次快照檢查和分期建檔檢查
+        watch(isLoggedIn, (v) => { 
+            if (v) {
+                setTimeout(checkAndSaveSnapshot, 1000);
+                setTimeout(checkAndCreateInstallmentDueExpenses, 1500);
+            }
+        });
+
+        // 每小時檢查一次是否有應建檔的分期消費
+        setInterval(() => {
+            if (isLoggedIn.value && isDataLoaded.value) {
+                checkAndCreateInstallmentDueExpenses();
+            }
+        }, 3600000);
 
         // 當支出變化時，自動更新所有信用卡的帳單金額
         watch(expenses, () => {
@@ -1480,6 +1533,111 @@ createApp({
             return paymentMethods.value.find(p => String(p.id) === String(id))?.name || '-';
         };
 
+        // ===== 分期付款相關函數 =====
+        const isPaymentMethodCreditCard = (pmId) => {
+            return String(pmId).startsWith('card_') || displayPaymentOptions.value.find(p => p.id === pmId)?.isCard === true;
+        };
+
+        const calculateInstallmentPreview = (amount, count, rate) => {
+            if (!amount || !count || count < 2) return { total: amount || 0, monthly: amount || 0, first: amount || 0 };
+            const rateDecimal = (rate || 0) / 100;
+            const total = Math.round(amount * (1 + rateDecimal) * 100) / 100;
+            const monthly = Math.floor(total / count * 100) / 100;
+            const remainder = Math.round((total - monthly * count) * 100) / 100;
+            const first = Math.round((monthly + remainder) * 100) / 100;
+            return { total, monthly, first };
+        };
+
+        // 生成分期記錄（第1期及後續所有期次）
+        const createInstallmentRecords = (expense, count, rate) => {
+            const preview = calculateInstallmentPreview(expense.amount, count, rate);
+            const groupId = Date.now();
+            const records = [];
+
+            for (let i = 1; i <= count; i++) {
+                const periodDate = new Date(expense.date);
+                periodDate.setMonth(periodDate.getMonth() + (i - 1));
+                const periodDateStr = periodDate.toISOString().slice(0, 10);
+
+                const recordAmount = i === 1 ? preview.first : preview.monthly;
+                records.push({
+                    ...expense,
+                    id: groupId * 1000 + i,
+                    date: periodDateStr,
+                    amount: recordAmount,
+                    installmentInfo: {
+                        groupId,
+                        totalAmount: expense.amount,
+                        rate,
+                        count,
+                        monthlyAmount: preview.monthly,
+                        firstAmount: preview.first,
+                        periodNumber: i,
+                        originalDate: expense.date,
+                        createdAt: new Date().toISOString()
+                    }
+                });
+            }
+            return records;
+        };
+
+        // 檢查並自動建檔應到期的分期消費
+        const checkAndCreateInstallmentDueExpenses = () => {
+            const today = new Date().toISOString().slice(0, 10);
+            const processedGroupIds = new Set();
+
+            expenses.value.forEach(exp => {
+                if (!exp.installmentInfo || processedGroupIds.has(exp.installmentInfo.groupId)) return;
+                processedGroupIds.add(exp.installmentInfo.groupId);
+
+                const { groupId, count, originalDate, periodNumber } = exp.installmentInfo;
+                
+                // 計算每一期應該建檔的日期
+                for (let i = periodNumber + 1; i <= count; i++) {
+                    // 檢查該期是否已存在
+                    const periodExists = expenses.value.some(e => 
+                        e.installmentInfo?.groupId === groupId && 
+                        e.installmentInfo?.periodNumber === i
+                    );
+                    
+                    if (periodExists) continue;
+
+                    // 計算該期應建檔日期
+                    const nextDate = new Date(originalDate);
+                    nextDate.setMonth(nextDate.getMonth() + (i - 1));
+                    const nextDateStr = nextDate.toISOString().slice(0, 10);
+
+                    // 若應建檔日期 <= 今日，建立該期記錄
+                    if (nextDateStr <= today) {
+                        const preview = calculateInstallmentPreview(exp.installmentInfo.totalAmount, count, exp.installmentInfo.rate);
+                        const amount = i === 1 ? preview.first : preview.monthly;
+
+                        expenses.value.push({
+                            id: groupId * 1000 + i,
+                            date: nextDateStr,
+                            title: exp.title,
+                            categoryId: exp.categoryId,
+                            paymentMethodId: exp.paymentMethodId,
+                            amount,
+                            scope: exp.scope,
+                            user: exp.user,
+                            installmentInfo: {
+                                groupId,
+                                totalAmount: exp.installmentInfo.totalAmount,
+                                rate: exp.installmentInfo.rate,
+                                count,
+                                monthlyAmount: preview.monthly,
+                                firstAmount: preview.first,
+                                periodNumber: i,
+                                originalDate: exp.installmentInfo.originalDate,
+                                createdAt: new Date().toISOString()
+                            }
+                        });
+                    }
+                }
+            });
+        };
+
         return {
             currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
             expenseForm, budgetForm, creditCardForm, newItemName, editingExpense, editingCreditCard, expandedCategoryId,
@@ -1491,11 +1649,34 @@ createApp({
             addCreditCard, openEditCreditCard, saveCreditCardEdit, deleteCreditCard, calculateDaysUntilDueDate, calculateCreditCardBill, getReferenceDateForMonth,
             snapshotKeys, downloadSnapshot,
             exportBackupManual, importBackup, getCategoryExpenses,
+            isPaymentMethodCreditCard, calculateInstallmentPreview, checkAndCreateInstallmentDueExpenses,
             addExpense: () => {
-                if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId) return;
-                expenses.value.push({ ...expenseForm.value, id: Date.now(), user: currentUser.value });
+                if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId || !expenseForm.value.amount) return;
+                
+                const baseExpense = {
+                    ...expenseForm.value,
+                    id: Date.now(),
+                    user: currentUser.value,
+                    installment: undefined // 移除表單的臨時分期字段
+                };
+
+                // 檢查是否啟用分期
+                if (expenseForm.value.installment?.enabled && expenseForm.value.installment.count >= 2) {
+                    const iCount = expenseForm.value.installment.count;
+                    const iRate = expenseForm.value.installment.rate || 0;
+                    const records = createInstallmentRecords(baseExpense, iCount, iRate);
+                    
+                    // 僅將第1期加入 expenses（後續期次由自動排程建檔）
+                    expenses.value.push(records[0]);
+                } else {
+                    // 非分期消費，直接添加
+                    expenses.value.push(baseExpense);
+                }
+
+                // 重置表單
                 expenseForm.value.title = '';
                 expenseForm.value.amount = null;
+                expenseForm.value.installment = { enabled: false, count: 2, rate: 0 };
             },
             addBudget: () => {
                 budgets.value.push({ ...budgetForm.value, id: Date.now(), user: currentUser.value, month: currentMonth.value });
