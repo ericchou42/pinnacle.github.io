@@ -1094,6 +1094,10 @@ createApp({
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentUser = ref(urlParams.get('user') || 'Eric');
+        // 存取密鑰：從網址參數讀取（例如 ?user=Eric&key=你的密鑰），
+        // 不寫死在原始碼，因此公開的 GitHub repo 不會洩漏密鑰。
+        // 後端會以此密鑰驗證請求，未帶正確密鑰者無法讀寫資料庫。
+        const apiKey = urlParams.get('key') || '';
 
         const tabs = [
             { id: 'expense', name: '記帳', icon: '📝' },
@@ -1127,7 +1131,8 @@ createApp({
 
         const saveLocalBackup = () => {
             try {
-                localStorage.setItem('financeBackup', JSON.stringify({
+                const backupKey = 'financeBackup_' + currentUser.value;
+                localStorage.setItem(backupKey, JSON.stringify({
                     budgets: budgets.value, expenses: expenses.value,
                     categories: categories.value, paymentMethods: paymentMethods.value,
                     savingsTargets: savingsTargets.value, creditCards: creditCards.value, savedAt: new Date().toISOString()
@@ -1137,7 +1142,8 @@ createApp({
 
         const loadLocalBackup = () => {
             try {
-                const raw = localStorage.getItem('financeBackup');
+                const backupKey = 'financeBackup_' + currentUser.value;
+                const raw = localStorage.getItem(backupKey);
                 if (!raw) return false;
                 const data = JSON.parse(raw);
                 if (Array.isArray(data.budgets)) budgets.value = data.budgets;
@@ -1159,18 +1165,25 @@ createApp({
         const loadData = async () => {
             isLoading = true;
             try {
-                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load' }) });
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load', userId: currentUser.value, key: apiKey }) });
                 const res = await response.json();
-                if (res.data) {
-                    if (Array.isArray(res.data.budgets) && res.data.budgets.length > 0) budgets.value = res.data.budgets;
-                    if (Array.isArray(res.data.expenses) && res.data.expenses.length > 0) expenses.value = res.data.expenses;
-                    if (Array.isArray(res.data.categories) && res.data.categories.length > 0) categories.value = res.data.categories;
-                    if (Array.isArray(res.data.paymentMethods) && res.data.paymentMethods.length > 0) paymentMethods.value = res.data.paymentMethods;
-                    if (Array.isArray(res.data.savingsTargets) && res.data.savingsTargets.length > 0) savingsTargets.value = res.data.savingsTargets;
-                    if (Array.isArray(res.data.creditCards) && res.data.creditCards.length > 0) creditCards.value = res.data.creditCards;
+                const d = res.data || {};
+                // 判斷雲端是否「真的有資料」（任一核心陣列有內容），而非只看 res.data 是否存在。
+                // 後端在未初始化時會回傳 {}，若僅以 res.data 是否存在判斷，會誤判為有資料而不載入本機備份。
+                const hasCloudData = ['budgets', 'expenses', 'categories', 'paymentMethods', 'savingsTargets', 'creditCards']
+                    .some(k => Array.isArray(d[k]) && d[k].length > 0);
+                if (hasCloudData) {
+                    if (Array.isArray(d.budgets) && d.budgets.length > 0) budgets.value = d.budgets;
+                    if (Array.isArray(d.expenses) && d.expenses.length > 0) expenses.value = d.expenses;
+                    if (Array.isArray(d.categories) && d.categories.length > 0) categories.value = d.categories;
+                    if (Array.isArray(d.paymentMethods) && d.paymentMethods.length > 0) paymentMethods.value = d.paymentMethods;
+                    if (Array.isArray(d.savingsTargets) && d.savingsTargets.length > 0) savingsTargets.value = d.savingsTargets;
+                    if (Array.isArray(d.creditCards) && d.creditCards.length > 0) creditCards.value = d.creditCards;
                     config.value = res.config || { password: '1234' };
                     saveLocalBackup();
                 } else {
+                    // 雲端尚無資料：改用本機備份還原，避免後續自動存檔把空資料覆蓋回雲端。
+                    config.value = res.config || config.value || { password: '1234' };
                     loadLocalBackup();
                 }
             } catch (e) {
@@ -1188,10 +1201,19 @@ createApp({
             syncing.value = true;
             let payload = {};
             if (action === 'save') {
-                payload = { action: 'save', data: { budgets: budgets.value, expenses: expenses.value, categories: categories.value, paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value, creditCards: creditCards.value }};
+                // 全空資料防護：若核心資料全為空，極可能是載入異常造成的空狀態，
+                // 此時寫入會把雲端與本機既有資料覆蓋掉，故直接略過存檔。
+                const allEmpty = [budgets.value, expenses.value, categories.value, paymentMethods.value, savingsTargets.value, creditCards.value]
+                    .every(arr => !Array.isArray(arr) || arr.length === 0);
+                if (allEmpty) {
+                    console.warn('saveData 已略過：偵測到資料全空，避免覆蓋雲端/本機既有資料。');
+                    setTimeout(() => syncing.value = false, 300);
+                    return;
+                }
+                payload = { action: 'save', userId: currentUser.value, key: apiKey, data: { budgets: budgets.value, expenses: expenses.value, categories: categories.value, paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value, creditCards: creditCards.value }};
                 saveLocalBackup();
             } else {
-                payload = { action: 'saveConfig', config: config.value };
+                payload = { action: 'saveConfig', userId: currentUser.value, key: apiKey, config: config.value };
             }
             try {
                 await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -1279,6 +1301,10 @@ createApp({
         // 資料變動時更新今日快照（同步到雲端後也更新本機快照）
         watch([budgets, expenses, categories, paymentMethods, savingsTargets, creditCards], () => {
             if (isDataLoaded.value && isLoggedIn.value && !isLoading) {
+                // 全空資料不寫入，避免覆蓋雲端、本機備份與今日快照
+                const allEmpty = [budgets.value, expenses.value, categories.value, paymentMethods.value, savingsTargets.value, creditCards.value]
+                    .every(arr => !Array.isArray(arr) || arr.length === 0);
+                if (allEmpty) return;
                 saveData('save');
                 saveSnapshot();
             }

@@ -1,0 +1,238 @@
+// =============================================================
+// MonthlyBudgeter 後端 (Google Apps Script)
+// 儲存層：Google Sheets（取代 ScriptProperties，容量幾乎無上限）
+// 特性：
+//   1. per-user 合併寫入（避免多人/多裝置互相整份覆蓋）
+//   2. LockService 鎖定（避免併發 read-modify-write 競態）
+//   3. 每日雲端自動備份分頁（保留近 MAX_BACKUPS 天，等同雲端版快照）
+//   4. 大型 JSON 分塊存放，突破單一儲存格 50000 字元上限
+// =============================================================
+
+// 依使用者紀錄分鍵的陣列欄位（每筆紀錄都帶 user 欄位）
+var USER_KEYED_FIELDS = ['budgets', 'expenses', 'categories', 'paymentMethods', 'creditCards'];
+
+var MAIN_SHEET = 'FinanceData';     // 主資料分頁
+var CONFIG_SHEET = 'Config';        // 設定（密碼等）分頁
+var BACKUP_PREFIX = 'Backup_';      // 每日備份分頁前綴
+var MAX_BACKUPS = 14;               // 保留近 14 天的雲端備份分頁
+var CHUNK_SIZE = 40000;             // 每格存放字元數（< 50000 上限，保留餘裕）
+var SS_ID_KEY = 'spreadsheetId';    // ScriptProperties 內記錄試算表 ID 的鍵
+var API_KEY_PROP = 'apiKey';        // ScriptProperties 內存放正確存取密鑰的鍵
+
+// 驗證請求是否帶有正確的存取密鑰。
+// 正確密鑰存在 ScriptProperties（不在公開的前端 repo），由你手動設定一次。
+// 若尚未設定密鑰（為相容舊狀態），則不阻擋；一旦設定即強制驗證。
+function isAuthorized(params) {
+  var expected = PropertiesService.getScriptProperties().getProperty(API_KEY_PROP);
+  if (!expected) return true; // 未設定密鑰時不阻擋（請務必設定以啟用防護）
+  return params && params.key === expected;
+}
+
+function jsonOutput(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// 取得（或第一次自動建立）資料試算表
+function getSpreadsheet() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty(SS_ID_KEY);
+  if (id) {
+    try {
+      return SpreadsheetApp.openById(id);
+    } catch (err) {
+      // 試算表被刪除等情況，重建一份
+    }
+  }
+  var ss = SpreadsheetApp.create('MonthlyBudgeter DB');
+  props.setProperty(SS_ID_KEY, ss.getId());
+  return ss;
+}
+
+function getOrCreateSheet(ss, name) {
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+  return sheet;
+}
+
+// 將長字串分塊寫入指定分頁的 A 欄（A1, A2, ...）
+function writeChunked(sheet, str) {
+  sheet.clearContents();
+  str = str || '';
+  var chunks = [];
+  for (var i = 0; i < str.length; i += CHUNK_SIZE) {
+    chunks.push([str.substring(i, i + CHUNK_SIZE)]);
+  }
+  if (chunks.length === 0) chunks.push(['']);
+  sheet.getRange(1, 1, chunks.length, 1).setValues(chunks);
+}
+
+// 讀取分頁 A 欄所有分塊並組回完整字串
+function readChunked(sheet) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 1) return '';
+  var values = sheet.getRange(1, 1, lastRow, 1).getValues();
+  return values.map(function (row) { return row[0]; }).join('');
+}
+
+// 每日雲端備份：以日期為分頁名，同日覆蓋；保留近 MAX_BACKUPS 天，刪除更舊者。
+function saveDailyBackup(ss, jsonStr) {
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var backupSheet = getOrCreateSheet(ss, BACKUP_PREFIX + today);
+  writeChunked(backupSheet, jsonStr);
+
+  // 清除超過保留天數的舊備份分頁
+  var backupSheets = ss.getSheets().filter(function (sh) {
+    return sh.getName().indexOf(BACKUP_PREFIX) === 0;
+  });
+  backupSheets
+    .map(function (sh) { return sh.getName(); })
+    .sort()                 // 日期字串升冪
+    .slice(0, Math.max(0, backupSheets.length - MAX_BACKUPS))
+    .forEach(function (name) {
+      var sh = ss.getSheetByName(name);
+      if (sh) ss.deleteSheet(sh);
+    });
+}
+
+// 將傳入的單一使用者資料合併進現有的整份資料：
+// 對每個 user-keyed 欄位，移除該 user 的舊紀錄，再接上該 user 的新紀錄，
+// 其他使用者的紀錄完全保留 → 徹底避免多人/多裝置互相整份覆蓋。
+function mergeUserData(existing, incoming, userId) {
+  var merged = existing && typeof existing === 'object' ? existing : {};
+
+  USER_KEYED_FIELDS.forEach(function (key) {
+    var incomingArr = Array.isArray(incoming[key]) ? incoming[key] : [];
+    var existingArr = Array.isArray(merged[key]) ? merged[key] : [];
+    // 保留其他使用者的紀錄
+    var others = existingArr.filter(function (r) { return r && r.user !== userId; });
+    // 只取傳入資料中屬於這位使用者的紀錄
+    var mine = incomingArr.filter(function (r) { return r && r.user === userId; });
+    merged[key] = others.concat(mine);
+  });
+
+  // savingsTargets 以 month 為主鍵合併：common 採傳入值（last-write），
+  // 個人欄位 personal_<user> 只更新登入者自己的。
+  var incomingSavings = Array.isArray(incoming.savingsTargets) ? incoming.savingsTargets : [];
+  var existingSavings = Array.isArray(merged.savingsTargets) ? merged.savingsTargets : [];
+  var byMonth = {};
+  existingSavings.forEach(function (s) { if (s && s.month) byMonth[s.month] = s; });
+  incomingSavings.forEach(function (s) {
+    if (!s || !s.month) return;
+    var target = byMonth[s.month] || { month: s.month, common: 0, personal_Eric: 0, personal_Livia: 0 };
+    if (typeof s.common === 'number') target.common = s.common;
+    if (userId === 'Eric' && typeof s.personal_Eric === 'number') target.personal_Eric = s.personal_Eric;
+    if (userId === 'Livia' && typeof s.personal_Livia === 'number') target.personal_Livia = s.personal_Livia;
+    byMonth[s.month] = target;
+  });
+  merged.savingsTargets = Object.keys(byMonth).map(function (m) { return byMonth[m]; });
+
+  return merged;
+}
+
+function doPost(e) {
+  var params = JSON.parse(e.postData.contents);
+  var action = params.action;
+
+  // 密鑰驗證：未帶或帶錯密鑰一律拒絕，避免公開 GAS_URL 被任意讀寫。
+  if (!isAuthorized(params)) {
+    return jsonOutput({ status: 'error', message: 'unauthorized' });
+  }
+
+  if (action === 'save') {
+    // 取鎖避免多人/多裝置同時 read-modify-write 造成覆蓋
+    var lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      var ss = getSpreadsheet();
+      var dataSheet = getOrCreateSheet(ss, MAIN_SHEET);
+      var userId = params.userId;
+      var existingRaw = readChunked(dataSheet) || '{}';
+      var existing;
+      try { existing = JSON.parse(existingRaw); } catch (err) { existing = {}; }
+      var incoming = params.data || {};
+      // 沒有 userId 時退回整份寫入，但正常情況前端都會帶 userId
+      var merged = userId ? mergeUserData(existing, incoming, userId) : incoming;
+      var mergedStr = JSON.stringify(merged);
+      writeChunked(dataSheet, mergedStr);
+      // 雲端每日備份分頁
+      saveDailyBackup(ss, mergedStr);
+      return jsonOutput({ status: 'success' });
+    } finally {
+      lock.releaseLock();
+    }
+  }
+
+  if (action === 'saveConfig') {
+    var ssc = getSpreadsheet();
+    var configSheet = getOrCreateSheet(ssc, CONFIG_SHEET);
+    writeChunked(configSheet, JSON.stringify(params.config || {}));
+    return jsonOutput({ status: 'success' });
+  }
+
+  if (action === 'load') {
+    var ssl = getSpreadsheet();
+    var dataSheetL = getOrCreateSheet(ssl, MAIN_SHEET);
+    var configSheetL = getOrCreateSheet(ssl, CONFIG_SHEET);
+
+    var dataRaw = readChunked(dataSheetL) || '{}';
+    var configRaw = readChunked(configSheetL) || JSON.stringify({ password: '1234' }); // 預設密碼 1234
+
+    var dataObj, configObj;
+    try { dataObj = JSON.parse(dataRaw); } catch (err) { dataObj = {}; }
+    try { configObj = JSON.parse(configRaw); } catch (err) { configObj = { password: '1234' }; }
+
+    return jsonOutput({ data: dataObj, config: configObj });
+  }
+
+  return jsonOutput({ status: 'error', message: 'unknown action' });
+}
+
+// =============================================================
+// 一次性遷移：把舊版 ScriptProperties 的資料搬進 Google Sheets。
+// 部署新版後，在 Apps Script 編輯器手動執行此函式「一次」即可。
+// 重複執行也安全：若 Sheets 主資料已有內容則不覆蓋。
+// =============================================================
+function migrateFromScriptProperties() {
+  var props = PropertiesService.getScriptProperties();
+  var oldData = props.getProperty('financeData');
+  var oldConfig = props.getProperty('appConfig');
+
+  var ss = getSpreadsheet();
+  var dataSheet = getOrCreateSheet(ss, MAIN_SHEET);
+  var configSheet = getOrCreateSheet(ss, CONFIG_SHEET);
+
+  var existing = readChunked(dataSheet);
+  var hasExisting = existing && existing.replace(/\s/g, '') !== '' && existing.replace(/\s/g, '') !== '{}';
+
+  if (oldData && !hasExisting) {
+    writeChunked(dataSheet, oldData);
+    saveDailyBackup(ss, oldData);
+    Logger.log('已遷移 financeData 至 Sheets');
+  } else {
+    Logger.log('略過 financeData 遷移（無舊資料或 Sheets 已有資料）');
+  }
+
+  if (oldConfig) {
+    var existingConfig = readChunked(configSheet);
+    if (!existingConfig || existingConfig.replace(/\s/g, '') === '') {
+      writeChunked(configSheet, oldConfig);
+      Logger.log('已遷移 appConfig 至 Sheets');
+    }
+  }
+
+  Logger.log('遷移完成。試算表 ID: ' + ss.getId());
+  return ss.getUrl();
+}
+
+// =============================================================
+// 設定存取密鑰：在 Apps Script 編輯器手動執行一次。
+// 1. 把下方 MY_SECRET_KEY 改成你自訂的長字串（建議 20+ 位英數）。
+// 2. 選此函式並執行，密鑰即存入 ScriptProperties（不會進入公開 repo）。
+// 3. 之後用書籤網址存取：?user=Eric&key=你的密鑰
+// 執行完建議把字串清掉，避免留在編輯器中。
+// =============================================================
+function setApiKey() {
+  var MY_SECRET_KEY = '請改成你自己的長密鑰';
+  PropertiesService.getScriptProperties().setProperty(API_KEY_PROP, MY_SECRET_KEY);
+  Logger.log('已設定存取密鑰。');
+}
