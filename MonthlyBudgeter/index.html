@@ -1129,33 +1129,10 @@ createApp({
         // ===== 資料載入 =====
         let isLoading = false;
 
-        const saveLocalBackup = () => {
-            try {
-                const backupKey = 'financeBackup_' + currentUser.value;
-                localStorage.setItem(backupKey, JSON.stringify({
-                    budgets: budgets.value, expenses: expenses.value,
-                    categories: categories.value, paymentMethods: paymentMethods.value,
-                    savingsTargets: savingsTargets.value, creditCards: creditCards.value, savedAt: new Date().toISOString()
-                }));
-            } catch(e) { console.warn('localStorage 備份失敗', e); }
-        };
-
-        const loadLocalBackup = () => {
-            try {
-                const backupKey = 'financeBackup_' + currentUser.value;
-                const raw = localStorage.getItem(backupKey);
-                if (!raw) return false;
-                const data = JSON.parse(raw);
-                if (Array.isArray(data.budgets)) budgets.value = data.budgets;
-                if (Array.isArray(data.expenses)) expenses.value = data.expenses;
-                if (Array.isArray(data.categories)) categories.value = data.categories;
-                if (Array.isArray(data.paymentMethods)) paymentMethods.value = data.paymentMethods;
-                if (Array.isArray(data.savingsTargets)) savingsTargets.value = data.savingsTargets;
-                if (Array.isArray(data.creditCards)) creditCards.value = data.creditCards;
-                console.log('已從 localStorage 還原備份，備份時間:', data.savedAt);
-                return true;
-            } catch(e) { return false; }
-        };
+        // 純雲端模式：不再使用 localStorage 備份（保留空殼避免其他呼叫處出錯）。
+        // 雲端那側仍有每日 Backup_yyyy-MM-dd 分頁作為備援。
+        const saveLocalBackup = () => {};
+        const loadLocalBackup = () => false;
 
         const cleanupCreditCards = () => {
             // 只在 Vue 中显示属于当前用户的卡，但不修改原始数组（避免触发 watch）
@@ -1168,30 +1145,19 @@ createApp({
                 const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load', userId: currentUser.value, key: apiKey }) });
                 const res = await response.json();
                 const d = res.data || {};
-                // 判斷雲端是否「真的有資料」（任一核心陣列有內容），而非只看 res.data 是否存在。
-                // 後端在未初始化時會回傳 {}，若僅以 res.data 是否存在判斷，會誤判為有資料而不載入本機備份。
-                const hasCloudData = ['budgets', 'expenses', 'categories', 'paymentMethods', 'savingsTargets', 'creditCards']
-                    .some(k => Array.isArray(d[k]) && d[k].length > 0);
-                if (hasCloudData) {
-                    if (Array.isArray(d.budgets) && d.budgets.length > 0) budgets.value = d.budgets;
-                    if (Array.isArray(d.expenses) && d.expenses.length > 0) expenses.value = d.expenses;
-                    if (Array.isArray(d.categories) && d.categories.length > 0) categories.value = d.categories;
-                    if (Array.isArray(d.paymentMethods) && d.paymentMethods.length > 0) paymentMethods.value = d.paymentMethods;
-                    if (Array.isArray(d.savingsTargets) && d.savingsTargets.length > 0) savingsTargets.value = d.savingsTargets;
-                    if (Array.isArray(d.creditCards) && d.creditCards.length > 0) creditCards.value = d.creditCards;
-                    config.value = res.config || { password: '1234' };
-                    saveLocalBackup();
-                } else {
-                    // 雲端尚無資料：改用本機備份還原，避免後續自動存檔把空資料覆蓋回雲端。
-                    config.value = res.config || config.value || { password: '1234' };
-                    loadLocalBackup();
-                }
+                // 純雲端模式：一律以雲端回傳為準（雲端是唯一真實來源）。
+                // 雲端沒有的欄位就維持空陣列，不再從 localStorage 還原，避免測試被本機舊資料干擾。
+                budgets.value = Array.isArray(d.budgets) ? d.budgets : [];
+                expenses.value = Array.isArray(d.expenses) ? d.expenses : [];
+                categories.value = Array.isArray(d.categories) ? d.categories : [];
+                paymentMethods.value = Array.isArray(d.paymentMethods) ? d.paymentMethods : [];
+                savingsTargets.value = Array.isArray(d.savingsTargets) ? d.savingsTargets : [];
+                creditCards.value = Array.isArray(d.creditCards) ? d.creditCards : [];
+                config.value = res.config || { password: '1234' };
             } catch (e) {
-                const restored = loadLocalBackup();
-                if (restored) alert('⚠️ 無法連線至雲端，已從本機備份還原資料。');
-                else alert('⚠️ 無法連線至雲端，且無本機備份。');
+                // 純雲端模式：連不上就維持空白並提示，不從本機還原。
+                alert('⚠️ 無法連線至雲端，請檢查網路或稍後再試（本次不會載入任何本機資料）。');
             } finally {
-                // 不再在這裡清理卡片，使用 userCreditCards 計算屬性隱藏其他用戶的卡
                 isLoading = false;
                 isDataLoaded.value = true;
             }
@@ -1211,7 +1177,6 @@ createApp({
                     return;
                 }
                 payload = { action: 'save', userId: currentUser.value, key: apiKey, data: { budgets: budgets.value, expenses: expenses.value, categories: categories.value, paymentMethods: paymentMethods.value, savingsTargets: savingsTargets.value, creditCards: creditCards.value }};
-                saveLocalBackup();
             } else {
                 payload = { action: 'saveConfig', userId: currentUser.value, key: apiKey, config: config.value };
             }
@@ -1224,56 +1189,14 @@ createApp({
             }
         };
 
-        // ===== 7 天滾動快照 =====
-        const SNAPSHOT_PREFIX = 'financeSnapshot_';
-        const MAX_SNAPSHOTS = 7;
+        // ===== 快照（純雲端模式：不再寫 localStorage，雲端每日 Backup_ 分頁取代） =====
+        const snapshotKeys = ref([]);
+        const saveSnapshot = () => {};
+        const checkAndSaveSnapshot = () => {};
 
-        const getTodayKey = () => {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-        };
-
-        const getSnapshotKeys = () => {
-            return Object.keys(localStorage)
-                .filter(k => k.startsWith(SNAPSHOT_PREFIX))
-                .map(k => k.replace(SNAPSHOT_PREFIX, ''))
-                .sort()
-                .reverse();
-        };
-
-        const snapshotKeys = ref(getSnapshotKeys());
-
-        const saveSnapshot = () => {
-            try {
-                const key = getTodayKey();
-                const snapshot = JSON.stringify({
-                    budgets: budgets.value, expenses: expenses.value,
-                    categories: categories.value, paymentMethods: paymentMethods.value,
-                    savingsTargets: savingsTargets.value, creditCards: creditCards.value,
-                    savedAt: new Date().toISOString()
-                });
-                localStorage.setItem(SNAPSHOT_PREFIX + key, snapshot);
-                // 清除超過 MAX_SNAPSHOTS 的舊快照
-                const keys = getSnapshotKeys();
-                keys.slice(MAX_SNAPSHOTS).forEach(k => localStorage.removeItem(SNAPSHOT_PREFIX + k));
-                snapshotKeys.value = getSnapshotKeys();
-            } catch(e) { console.warn('快照儲存失敗', e); }
-        };
-
-        const checkAndSaveSnapshot = () => {
-            if (!isLoggedIn.value || !isDataLoaded.value) return;
-            const key = getTodayKey();
-            if (!localStorage.getItem(SNAPSHOT_PREFIX + key)) {
-                saveSnapshot();
-            }
-        };
-
-        setInterval(checkAndSaveSnapshot, 60000);
-
-        // 登入後立刻觸發一次快照檢查和分期建檔檢查
-        watch(isLoggedIn, (v) => { 
+        // 登入後立刻觸發一次分期建檔檢查
+        watch(isLoggedIn, (v) => {
             if (v) {
-                setTimeout(checkAndSaveSnapshot, 1000);
                 setTimeout(checkAndCreateInstallmentDueExpenses, 1500);
             }
         });
@@ -1298,15 +1221,14 @@ createApp({
             }
         }, { deep: true });
 
-        // 資料變動時更新今日快照（同步到雲端後也更新本機快照）
+        // 資料變動時自動儲存至雲端（純雲端模式：不再寫本機快照）
         watch([budgets, expenses, categories, paymentMethods, savingsTargets, creditCards], () => {
             if (isDataLoaded.value && isLoggedIn.value && !isLoading) {
-                // 全空資料不寫入，避免覆蓋雲端、本機備份與今日快照
+                // 全空資料不寫入，避免覆蓋雲端既有資料
                 const allEmpty = [budgets.value, expenses.value, categories.value, paymentMethods.value, savingsTargets.value, creditCards.value]
                     .every(arr => !Array.isArray(arr) || arr.length === 0);
                 if (allEmpty) return;
                 saveData('save');
-                saveSnapshot();
             }
         }, { deep: true });
 
@@ -1677,16 +1599,9 @@ createApp({
             URL.revokeObjectURL(url);
         };
 
+        // 純雲端模式：不再有本機快照，改提示改用雲端每日備份分頁。
         const downloadSnapshot = (dateKey) => {
-            const raw = localStorage.getItem(SNAPSHOT_PREFIX + dateKey);
-            if (!raw) { alert('找不到該日期快照'); return; }
-            const blob = new Blob([raw], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `finance_snapshot_${dateKey}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+            alert('純雲端模式下不再保存本機快照。\n歷史備份請至 Google 試算表「MonthlyBudgeter DB」的 Backup_ 分頁查看。');
         };
 
         const importBackup = (event) => {

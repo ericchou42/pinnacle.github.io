@@ -75,10 +75,15 @@ function readChunked(sheet) {
 }
 
 // 每日雲端備份：以日期為分頁名，同日覆蓋；保留近 MAX_BACKUPS 天，刪除更舊者。
+// 備份內容以「依欄位展開的表格」呈現（每個集合一個區塊，首列為欄位名，其後每列一筆紀錄），
+// 方便直接在試算表中閱讀，而非一整串 JSON。
 function saveDailyBackup(ss, jsonStr) {
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var backupSheet = getOrCreateSheet(ss, BACKUP_PREFIX + today);
-  writeChunked(backupSheet, jsonStr);
+
+  var dataObj;
+  try { dataObj = JSON.parse(jsonStr || '{}'); } catch (err) { dataObj = {}; }
+  writeTable(backupSheet, buildBackupRows(dataObj));
 
   // 清除超過保留天數的舊備份分頁
   var backupSheets = ss.getSheets().filter(function (sh) {
@@ -92,6 +97,66 @@ function saveDailyBackup(ss, jsonStr) {
       var sh = ss.getSheetByName(name);
       if (sh) ss.deleteSheet(sh);
     });
+}
+
+// 要在備份中依序展開的集合
+var BACKUP_COLLECTIONS = ['expenses', 'budgets', 'categories', 'paymentMethods', 'creditCards', 'savingsTargets'];
+
+// 將單一儲存格值正規化：物件/陣列轉 JSON 字串，null/undefined 轉空字串。
+function flattenCell(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return v;
+}
+
+// 將備份資料物件轉成「依欄位展開」的二維陣列。
+function buildBackupRows(dataObj) {
+  var rows = [];
+  rows.push(['MonthlyBudgeter 備份', Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss')]);
+  rows.push([]);
+
+  BACKUP_COLLECTIONS.forEach(function (coll) {
+    var arr = Array.isArray(dataObj[coll]) ? dataObj[coll] : [];
+    rows.push(['【' + coll + '】', '共 ' + arr.length + ' 筆']);
+
+    if (arr.length === 0) {
+      rows.push(['(無資料)']);
+      rows.push([]);
+      return;
+    }
+
+    // 收集所有出現過的欄位（保持首次出現順序）作為表頭
+    var cols = [];
+    arr.forEach(function (rec) {
+      if (rec && typeof rec === 'object') {
+        Object.keys(rec).forEach(function (k) {
+          if (cols.indexOf(k) === -1) cols.push(k);
+        });
+      }
+    });
+
+    rows.push(cols);
+    arr.forEach(function (rec) {
+      rows.push(cols.map(function (c) { return flattenCell(rec ? rec[c] : ''); }));
+    });
+    rows.push([]); // 區塊之間留白
+  });
+
+  return rows;
+}
+
+// 將不等長的列補齊成矩形後寫入分頁（setValues 需要矩形陣列）。
+function writeTable(sheet, rows) {
+  sheet.clear();
+  if (!rows.length) return;
+  var maxCols = 1;
+  rows.forEach(function (r) { if (r.length > maxCols) maxCols = r.length; });
+  var padded = rows.map(function (r) {
+    var copy = r.slice();
+    while (copy.length < maxCols) copy.push('');
+    return copy;
+  });
+  sheet.getRange(1, 1, padded.length, maxCols).setValues(padded);
 }
 
 // 將傳入的單一使用者資料合併進現有的整份資料：
@@ -232,7 +297,27 @@ function migrateFromScriptProperties() {
 // 執行完建議把字串清掉，避免留在編輯器中。
 // =============================================================
 function setApiKey() {
-  var MY_SECRET_KEY = '請改成你自己的長密鑰';
+  var MY_SECRET_KEY = '';
   PropertiesService.getScriptProperties().setProperty(API_KEY_PROP, MY_SECRET_KEY);
   Logger.log('已設定存取密鑰。');
+}
+// ===== 測試用：驗證 doPost 的讀取與密鑰驗證 =====
+function test_load() {
+  var e = { postData: { contents: JSON.stringify({
+    action: 'load',
+    userId: 'Eric',
+    key: ''   // 改成真正的密鑰
+  })}};
+  var out = doPost(e);
+  Logger.log(out.getContent());   // 應印出 {"data":{...},"config":{...}}
+}
+
+function test_unauthorized() {
+  var e = { postData: { contents: JSON.stringify({
+    action: 'load',
+    userId: 'Eric'
+    // 故意不帶 key
+  })}};
+  var out = doPost(e);
+  Logger.log(out.getContent());   // 設定密鑰後應印出 {"status":"error","message":"unauthorized"}
 }
