@@ -1,367 +1,853 @@
 <!DOCTYPE html>
-<html class="dark" lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>骨久 good night</title>
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              primary: "#F4C753",
-              "background-light": "#f8f7f6",
-              "background-dark": "#221d10",
-            },
-            fontFamily: {
-              display: "Manrope",
-            },
-            borderRadius: {
-              DEFAULT: "0.25rem",
-              lg: "0.5rem",
-              xl: "0.75rem",
-              full: "9999px",
-            },
-          },
-        },
-      };
-    </script>
-  </head>
-  <body
-    class="bg-background-light dark:bg-background-dark font-display text-[#1c1c1c] dark:text-white"
-  >
-    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
-      <div class="layout-container flex h-full grow flex-col">
-        <header
-          class="flex items-center justify-between whitespace-nowrap border-b border-primary/20 px-10 py-4"
-        >
-          <div class="flex items-center gap-3">
-            <div class="h-8 w-8 text-primary">
-              <svg
-                fill="none"
-                viewBox="0 0 48 48"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-            </div>
-            <h2
-              class="text-xl font-bold tracking-tight text-[#1c1c1c] dark:text-white"
-            >
-              骨久 good night
-            </h2>
-          </div>
-          <nav class="hidden items-center gap-8 md:flex">
-            <a
-              class="text-sm font-medium text-black/60 dark:text-white/60 hover:text-black/80 dark:hover:text-white/80"
-              href="#"
-              >首頁</a
-            >
-            <a
-              class="text-sm font-medium text-black/60 dark:text-white/60 hover:text-black/80 dark:hover:text-white/80"
-              href="#services"
-              >服務項目</a
-            >
-            <a
-              class="text-sm font-medium text-black/60 dark:text-white/60 hover:text-black/80 dark:hover:text-white/80"
-              href="#contact"
-              >聯絡我們</a
-            >
-            <button
-              class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white transition-all hover:bg-primary/90"
-            >
-              <span>立即預約</span>
-            </button>
-          </nav>
-        </header>
-        <main class="flex-1 px-4 py-8 sm:px-6 lg:px-8">
-          <div class="mx-auto max-w-5xl">
-            <div
-              class="relative min-h-[480px] w-full overflow-hidden rounded-xl"
-            >
-              <div
-                class="absolute inset-0 bg-cover bg-center"
-                style="
-                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA2-W8aVFzbJIqUsUiYaFHFMA8kmp3VW6uJ8N-oucEZwI6g6a-lMMmrzpyQIdtugUHQGzMzVbl7853IB8mErvjSeRNzkuOaMhzT1amHGyTyCDvTd3CZ1xSCeLQv4c3ygX81YzfrwtBeMFEM5qSslJtqPWHmjFWC7-wQnMmVP4ui8zAK3D4MH32uNYuoMbRfJB6pZiX5mCyJSI48FrH4Eph9FH9MEqNJ_FSGMj6GaDrgeHiVUvkUqXZEo0u7CaEkWGfCj2RjNBhkNybz');
-                "
-              ></div>
-              <div class="absolute inset-0 bg-black/40"></div>
-              <div
-                class="relative z-10 flex h-full flex-col items-center justify-center gap-6 p-4 text-center"
-              >
-                <h1
-                  class="text-4xl font-extrabold tracking-tighter text-white sm:text-5xl md:text-6xl"
-                >
-                  骨久 good night
-                </h1>
-                <p class="max-w-2xl text-base text-white/80 sm:text-lg">
-                  您在淡水值得信賴的整復推拿服務。我們專注於緩解疲勞和矯正不良姿勢。
-                </p>
-                <button
-                  class="mt-4 flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-primary px-5 py-3 text-base font-bold text-white transition-all hover:bg-primary/90"
-                >
-                  <span>預約諮詢</span>
-                </button>
-              </div>
-            </div>
-            <section class="py-12 md:py-20" id="introduction">
-              <div class="grid gap-8 md:grid-cols-2 md:gap-12">
-                <div class="space-y-4">
-                  <h2
-                    class="text-3xl font-bold tracking-tight text-[#1c1c1c] dark:text-white"
-                  >
-                    整復推拿簡介
-                  </h2>
-                  <p class="text-black/70 dark:text-white/70">
-                    整復推拿專注於診斷和治療肌肉骨骼系統的失調，特別是脊椎。我們的服務包括：
-                  </p>
-                  <ul
-                    class="list-disc space-y-2 pl-5 text-black/70 dark:text-white/70"
-                  >
-                    <li>
-                      <strong>傳統整復：</strong
-                      >源遠流長的東方智慧，著重於筋骨平衡，舒緩深層疲勞。
-                    </li>
-                    <li>
-                      <strong>美式整復：</strong
-                      >精準科學的現代技術，快速調整脊椎，改善神經壓迫。
-                    </li>
-                    <li>
-                      <strong>日式整復：</strong
-                      >溫和細膩的調理手法，放鬆肌肉筋膜，適合各種體質。
-                    </li>
-                  </ul>
-                  <p class="text-black/70 dark:text-white/70">
-                    每種服務都針對特定問題，如肩頸疼痛、高低肩、骨盆前傾和長短腳，為您找回身體的平衡與舒適。
-                  </p>
-                </div>
-                <div class="flex items-center justify-center">
-                  <img
-                    alt="Chiropractic Adjustment"
-                    class="rounded-lg object-cover w-full h-full max-h-[300px]"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgcnRPH_-uI48qOKK8LoOmC_6bFS2Q8MrjzvJkGqVpu_P8dt8wpDj-D2-8SVhF9yCmMN0a7eYIbU1rxSJgkJ8NvAbksXVMB6yMHG_HXIlQhjmogE_ZnJW15q2wGFAy1hyLJLakZjIjR-1HZhD-QF1Z9EHAEJi5x6dwk-_7rQpswl_lbDotYJ7xOS0r0UZ34s4P3pZMLkNiIN_KodUYP6TrL6RojKbHQjHDLM5uf6yYX6NoMNJo_-MhZ3U85uxbfa-9aRQPgvqWLY75"
-                  />
-                </div>
-              </div>
-            </section>
-            <section class="py-12 md:py-20" id="services">
-              <h2
-                class="mb-12 text-center text-3xl font-bold tracking-tight text-[#1c1c1c] dark:text-white"
-              >
-                調理課程
-              </h2>
-              <div class="grid gap-8 md:grid-cols-1 lg:grid-cols-1">
-                <div
-                  class="flex flex-col overflow-hidden rounded-lg border border-primary/20 bg-background-light dark:bg-background-dark shadow-sm md:flex-row"
-                >
-                  <img
-                    alt="Intensive Adjustment"
-                    class="h-48 w-full object-cover md:h-auto md:w-1/3"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOCZ6U_lUQrU6iob5-oAovdM_IBmkal6w3OzbFg8N4zUVANLmhoxkUIzCJdjBjpry5Gt0_i5VJMHZdtVPYm-fmuLoRrrVKekRWoEPbYTe8Dfw-L1Yla3dIiDi9Mu8fW8hUu1KUqXB4lvqroZOdhhLU-ugj6I1AJqRdWpnVE76EQYV3kBJ5IauIPghBtFPDPHDpWr4ifRCHxcRtFhsqXUhEQFoWzB1_Xz22INr9UdJxocWxUapdpePatI05wZMxQRxFDQs9UtssG_Rh"
-                  />
-                  <div class="flex flex-1 flex-col justify-between p-6">
-                    <div class="space-y-2">
-                      <div class="flex items-baseline justify-between">
-                        <h3
-                          class="text-xl font-bold text-[#1c1c1c] dark:text-white"
-                        >
-                          深層調理（75分鐘）
-                        </h3>
-                        <p class="text-lg font-semibold text-primary">
-                          1500 NTD
-                        </p>
-                      </div>
-                      <p class="text-sm text-black/70 dark:text-white/70">
-                        針對長期累積的筋骨問題、慢性疼痛或初次接受整復的顧客，我們提供全身性的完整評估與深層調理。透過多種手法的結合，從根本上調整您的身體結構，緩解不適，找回身體的平衡與活力。
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="flex flex-col overflow-hidden rounded-lg border border-primary/20 bg-background-light dark:bg-background-dark shadow-sm md:flex-row"
-                >
-                  <img
-                    alt="General Adjustment"
-                    class="h-48 w-full object-cover md:h-auto md:w-1/3"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpBxxXrTUKw9GJh5UsH47Lm8jDnOYGHjRjaOSfiw8OwgBs-ARhdVgcgHXbWVpQSwNTvLYJr7bij0ohIMsr3--aY-hZQjjVKTZSGk93Ph--laNCyfXqERU-EWQ_S884lc9gEkUBOYlU2qHWOChcI4UvVE1KXJ4vE-rnOZvqVX3asSKGAzegBy8k8i2bW-FycNhgyt3GHwoyjh3D7bpzzytOKUHxvLuOCerx16gzPrnQBnSqUXi5H4e1i-hIefXP1R76uIygOse84Msz"
-                  />
-                  <div class="flex flex-1 flex-col justify-between p-6">
-                    <div class="space-y-2">
-                      <div class="flex items-baseline justify-between">
-                        <h3
-                          class="text-xl font-bold text-[#1c1c1c] dark:text-white"
-                        >
-                          一般調理（50分鐘）
-                        </h3>
-                        <p class="text-lg font-semibold text-primary">
-                          1000 NTD
-                        </p>
-                      </div>
-                      <p class="text-sm text-black/70 dark:text-white/70">
-                        適合定期保養或處理特定區域的痠痛問題。此課程著重於維持您身體的最佳狀態，預防舊疾復發，並持續優化您的姿勢與活動度。讓您在忙碌的生活中，也能保持輕鬆自在的身體感受。
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="flex flex-col overflow-hidden rounded-lg border border-primary/20 bg-background-light dark:bg-background-dark shadow-sm md:flex-row"
-                >
-                  <img
-                    alt="Local Adjustment"
-                    class="h-48 w-full object-cover md:h-auto md:w-1/3"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2-W8aVFzbJIqUsUiYaFHFMA8kmp3VW6uJ8N-oucEZwI6g6a-lMMmrzpyQIdtugUHQGzMzVbl7853IB8mErvjSeRNzkuOaMhzT1amHGyTyCDvTd3CZ1xSCeLQv4c3ygX81YzfrwtBeMFEM5qSslJtqPWHmjFWC7-wQnMmVP4ui8zAK3D4MH32uNYuoMbRfJB6pZiX5mCyJSI48FrH4Eph9FH9MEqNJ_FSGMj6GaDrgeHiVUvkUqXZEo0u7CaEkWGfCj2RjNBhkNybz"
-                  />
-                  <div class="flex flex-1 flex-col justify-between p-6">
-                    <div class="space-y-2">
-                      <div class="flex items-baseline justify-between">
-                        <h3
-                          class="text-xl font-bold text-[#1c1c1c] dark:text-white"
-                        >
-                          局部調理（25分鐘）
-                        </h3>
-                        <p class="text-lg font-semibold text-primary">
-                          500 NTD
-                        </p>
-                      </div>
-                      <p class="text-sm text-black/70 dark:text-white/70">
-                        針對突發性的局部不適，例如落枕、急性腰扭傷等問題，提供快速而精準的處理。在有限的時間內，集中火力解決您最迫切的痛點，讓您能盡快恢復正常活動，是現代人應對緊急狀況的最佳選擇。
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            <section class="py-12 md:py-20" id="contact">
-              <h2
-                class="mb-12 text-center text-3xl font-bold tracking-tight text-[#1c1c1c] dark:text-white"
-              >
-                聯絡我們
-              </h2>
-              <div
-                class="mx-auto grid max-w-5xl gap-8 md:grid-cols-2 lg:gap-12"
-              >
-                <div class="flex flex-col space-y-6">
-                  <p
-                    class="text-center text-black/70 dark:text-white/70 md:text-left"
-                  >
-                    如需預約和查詢，請通過以下方式與我們聯繫：
-                  </p>
-                  <div class="space-y-4">
-                    <a
-                      class="flex items-center gap-4 rounded-lg p-4 transition-colors hover:bg-primary/10 dark:hover:bg-primary/20"
-                      href="#"
-                    >
-                      <div
-                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary"
-                      >
-                        <svg
-                          fill="currentColor"
-                          height="24"
-                          viewBox="0 0 256 256"
-                          width="24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M128,24A104,104,0,0,0,24,128c0,40.1,21,75.3,51.81,93.36A8,8,0,0,0,80,216V188a8,8,0,0,0-8-8,56,56,0,0,1-48-52,8,8,0,0,0-8-8,16,16,0,0,1-16-16,8,8,0,0,1,8-8,88.1,88.1,0,0,1,88-88,8,8,0,0,1,0,16,72.08,72.08,0,0,0-72,72,8,8,0,0,0,8,8,32,32,0,0,0,32-32,8,8,0,0,1,16,0,48.05,48.05,0,0,1-48,48,8,8,0,0,0-8,8v8a8,8,0,0,0,8,8,40,40,0,1,0-23.44-37.28,8,8,0,1,0-13.12,8.56A55.8,55.8,0,0,1,88,172a8,8,0,0,0,8,8,72.08,72.08,0,0,0,72-72A104.11,104.11,0,0,0,128,24Z"
-                          ></path>
-                        </svg>
-                      </div>
-                      <div>
-                        <p class="font-semibold text-[#1c1c1c] dark:text-white">
-                          LINE
-                        </p>
-                        <p class="text-sm text-black/70 dark:text-white/70">
-                          在 LINE 上與我們聯繫。
-                        </p>
-                      </div>
-                    </a>
-                    <a
-                      class="flex items-center gap-4 rounded-lg p-4 transition-colors hover:bg-primary/10 dark:hover:bg-primary/20"
-                      href="#"
-                    >
-                      <div
-                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary"
-                      >
-                        <svg
-                          fill="currentColor"
-                          height="24"
-                          viewBox="0 0 256 256"
-                          width="24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160ZM176,24H80A56.06,56.06,0,0,0,24,80v96a56.06,56.06,0,0,0,56,56h96a56.06,56.06,0,0,0,56-56V80A56.06,56.06,0,0,0,176,24Zm40,152a40,40,0,0,1-40,40H80a40,40,0,0,1-40-40V80A40,40,0,0,1,80,40h96a40,40,0,0,1,40,40ZM192,76a12,12,0,1,1-12-12A12,12,0,0,1,192,76Z"
-                          ></path>
-                        </svg>
-                      </div>
-                      <div>
-                        <p class="font-semibold text-[#1c1c1c] dark:text-white">
-                          Instagram
-                        </p>
-                        <p class="text-sm text-black/70 dark:text-white/70">
-                          關注我們以獲取最新消息。
-                        </p>
-                      </div>
-                    </a>
-                    <div class="flex items-center gap-4 rounded-lg p-4">
-                      <div
-                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary"
-                      >
-                        <svg
-                          fill="currentColor"
-                          height="24"
-                          viewBox="0 0 256 256"
-                          width="24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"
-                          ></path>
-                        </svg>
-                      </div>
-                      <div>
-                        <p class="font-semibold text-[#1c1c1c] dark:text-white">
-                          地址
-                        </p>
-                        <p class="text-sm text-black/70 dark:text-white/70">
-                          新北市淡水區
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="overflow-hidden rounded-lg">
-                  <img
-                    alt="Map Location"
-                    class="h-full w-full object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL2KBQWDME0MdTBilaRB3xH9Y6kufSSMBk4Dau8b2NsxBZvhovGqabn3EEEjfdiZlSmemztHNR3U7Zo06XzrZEO5Ai5IogUpMM_me-EJO7S10s5uuCq10bGVW9L2pnwUr8J4GKHGWYh59Ge0RZY7DAZjl1EcvpC0WYTc1edIGlgDmODTA9gAa020Na87cFln1SBt96VbcLl66ZhOUPv_R5QD7Hf8UQIoQsNgqFSCS0rLfExH6ZT-j-1bowSaUTajUUiGEnb3hcqOtl"
-                  />
-                </div>
-              </div>
-            </section>
-          </div>
-        </main>
-        <footer
-          class="border-t border-primary/20 bg-background-light dark:bg-background-dark py-6 px-4 sm:px-6 lg:px-8"
-        >
-          <div
-            class="mx-auto max-w-5xl text-center text-sm text-black/60 dark:text-white/60"
-          >
-            <p>© 2024 骨久 good night. 版權所有。</p>
-          </div>
-        </footer>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>周恩哲 Eric — Curriculum Vitae</title>
+<meta name="description" content="周恩哲 Eric 的個人履歷與作品集：全端開發、物聯網數據展示、自動化測試、AI / RAG 應用。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FAF9F6;
+    --charcoal: #36454F;
+    --charcoal-soft: #5c6b75;
+    --sage: #9CAF88;
+    --sage-deep: #7f9268;
+    --line: #d9d6cd;
+    --paper-shadow: rgba(54, 69, 79, 0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--cream);
+    color: var(--charcoal);
+    font-family: 'EB Garamond', 'Cormorant Garamond', serif;
+    font-size: 19px;
+    line-height: 1.7;
+    font-feature-settings: "onum" 1, "liga" 1, "kern" 1;
+    -webkit-font-feature-settings: "onum" 1, "liga" 1, "kern" 1;
+    font-variant-numeric: oldstyle-nums;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* 微弱膠片粒子感 — 啞光紙質地 */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection { background: var(--sage); color: var(--cream); }
+
+  /* ===== 版面骨架 ===== */
+  .shell { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
+
+  .display {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+
+  .kicker {
+    font-family: 'Cormorant Garamond', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.42em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--sage-deep);
+  }
+
+  .eyebrow-num {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--sage-deep);
+  }
+
+  /* ===== 頂部導覽 ===== */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250, 249, 246, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .shell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+  }
+  .brand span { color: var(--sage-deep); font-style: italic; }
+  .topnav { display: flex; gap: 34px; }
+  .topnav a {
+    font-family: 'Cormorant Garamond', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--charcoal-soft);
+    text-decoration: none;
+    position: relative;
+    transition: color .25s ease;
+  }
+  .topnav a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -6px;
+    width: 0; height: 1px;
+    background: var(--sage-deep);
+    transition: width .3s ease;
+  }
+  .topnav a:hover { color: var(--charcoal); }
+  .topnav a:hover::after { width: 100%; }
+
+  /* ===== Hero ===== */
+  .hero { padding: 120px 0 90px; position: relative; }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 70px;
+    align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(3.2rem, 8vw, 6.4rem);
+    margin: 22px 0 8px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--sage-deep);
+  }
+  .hero .role {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    font-style: italic;
+    color: var(--charcoal-soft);
+    margin-bottom: 30px;
+  }
+  .hero .lede {
+    max-width: 33ch;
+    font-size: 1.08rem;
+    color: var(--charcoal-soft);
+  }
+  .hero-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+  .portrait {
+    width: 230px;
+    height: 280px;
+    object-fit: cover;
+    filter: grayscale(18%) contrast(1.02);
+    border: 1px solid var(--line);
+    padding: 10px;
+    background: #fff;
+    box-shadow: 0 18px 40px -24px var(--paper-shadow);
+  }
+  .qr {
+    width: 88px; height: 88px;
+    border: 1px solid var(--line);
+    padding: 6px; background: #fff;
+  }
+  .hero-meta {
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    color: var(--charcoal-soft);
+  }
+
+  .rule {
+    height: 1px;
+    background: var(--line);
+    border: none;
+    margin: 0;
+  }
+
+  /* ===== 區段標題 ===== */
+  section { padding: 84px 0; }
+  .sec-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 26px;
+    margin-bottom: 56px;
+  }
+  .sec-head .idx {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--sage-deep);
+  }
+  .sec-head h2 {
+    font-size: clamp(2rem, 4.5vw, 3.2rem);
+  }
+  .sec-head .en {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    color: var(--charcoal-soft);
+    margin-top: 6px;
+  }
+
+  /* ===== 關於我 ===== */
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 60px;
+  }
+  .about-lead {
+    grid-column: 1 / -1;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--charcoal);
+    max-width: 38ch;
+    margin-bottom: 30px;
+  }
+  .about-item {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .about-item .dot {
+    color: var(--sage-deep);
+    font-size: 0.7rem;
+    transform: translateY(-2px);
+  }
+  .about-item a { color: var(--charcoal); text-decoration: none; border-bottom: 1px solid var(--sage); transition: color .2s; }
+  .about-item a:hover { color: var(--sage-deep); }
+
+  /* ===== 經歷 timeline ===== */
+  .timeline { display: grid; gap: 0; }
+  .entry {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    gap: 50px;
+    padding: 38px 0;
+    border-top: 1px solid var(--line);
+  }
+  .entry:last-child { border-bottom: 1px solid var(--line); }
+  .entry .when {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--sage-deep);
+  }
+  .entry .org {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .entry .org img {
+    height: 30px; width: auto;
+    object-fit: contain;
+    filter: grayscale(100%);
+    opacity: 0.85;
+  }
+  .entry h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+  .entry .post-role {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--charcoal-soft);
+    margin-bottom: 12px;
+  }
+  .entry ul { list-style: none; columns: 1; }
+  .entry li {
+    position: relative;
+    padding-left: 20px;
+    color: var(--charcoal-soft);
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+  .entry li::before {
+    content: "—";
+    position: absolute; left: 0;
+    color: var(--sage);
+  }
+
+  /* ===== 作品集 — 橫向流向 ===== */
+  #works { position: relative; }
+  .works-intro {
+    max-width: 52ch;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-style: italic;
+    color: var(--charcoal-soft);
+    margin-bottom: 50px;
+  }
+  .works-flow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  .work-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 14px;
+    transition: transform .4s cubic-bezier(.2,.7,.2,1), box-shadow .4s ease;
+    box-shadow: 0 10px 30px -26px var(--paper-shadow);
+  }
+  .work-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 26px 50px -30px rgba(54,69,79,0.4);
+  }
+  .work-frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(145deg, #f3f1ea, #e9e6dc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .work-frame .glyph {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.2rem;
+    color: var(--sage-deep);
+    opacity: 0.55;
+  }
+  .work-no {
+    position: absolute;
+    top: 10px; left: 12px;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--charcoal-soft);
+  }
+  .work-body {
+    padding: 16px 6px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .work-body h4 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+  .work-body .en {
+    font-family: 'Cormorant Garamond', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.68rem;
+    color: var(--sage-deep);
+    font-weight: 600;
+  }
+  .work-body p {
+    font-size: 0.95rem;
+    color: var(--charcoal-soft);
+    margin-top: 2px;
+  }
+  .work-body .view {
+    margin-top: auto;
+    padding-top: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--charcoal);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .work-body .view .arrow {
+    transition: transform .3s ease;
+    color: var(--sage-deep);
+  }
+  .work-card:hover .view .arrow { transform: translateX(6px); }
+
+  /* ===== 擅長工具 ===== */
+  .skill-block { margin-bottom: 46px; }
+  .skill-block h3 {
+    font-family: 'Cormorant Garamond', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--charcoal-soft);
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .skill-block h3::after {
+    content: "";
+    flex: 1; height: 1px;
+    background: var(--line);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 14px; }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px 9px 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: border-color .25s, transform .25s;
+  }
+  .chip:hover { border-color: var(--sage); transform: translateY(-2px); }
+  .chip img {
+    width: 26px; height: 26px;
+    object-fit: contain;
+    filter: grayscale(100%);
+    opacity: 0.9;
+  }
+
+  /* ===== 頁尾 ===== */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 70px 0 60px;
+  }
+  .foot-grid {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  footer h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    line-height: 1.05;
+  }
+  footer h2 em { font-style: italic; font-weight: 500; color: var(--sage-deep); }
+  .foot-links { display: flex; gap: 26px; }
+  .foot-links a {
+    font-family: 'Cormorant Garamond', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    text-decoration: none;
+    border-bottom: 1px solid var(--sage);
+    padding-bottom: 3px;
+    transition: color .25s;
+  }
+  .foot-links a:hover { color: var(--sage-deep); }
+  .copyright {
+    margin-top: 40px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    color: var(--charcoal-soft);
+  }
+
+  /* ===== 進場動畫 ===== */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ===== 響應式 ===== */
+  @media (max-width: 920px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hero-aside { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; }
+    .works-flow { grid-template-columns: repeat(2, 1fr); }
+    .entry { grid-template-columns: 1fr; gap: 14px; }
+    .about-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .shell { padding: 0 22px; }
+    body { font-size: 18px; }
+    .topnav { display: none; }
+    .hero { padding: 70px 0 60px; }
+    .works-flow { grid-template-columns: 1fr; }
+    .sec-head { grid-template-columns: 1fr; gap: 8px; margin-bottom: 40px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 頂部導覽 -->
+  <div class="topbar">
+    <div class="shell">
+      <div class="brand">周恩哲 <span>Eric</span></div>
+      <nav class="topnav">
+        <a href="#about">關於</a>
+        <a href="#experience">經歷</a>
+        <a href="#works">作品</a>
+        <a href="#skills">工具</a>
+        <a href="#contact">聯絡</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="shell hero-grid">
+      <div>
+        <div class="kicker">Curriculum Vitae · 2026</div>
+        <h1 class="display">周恩哲 <em>Eric</em></h1>
+        <p class="role">全端開發 · 物聯網數據展示 · 自動化測試 · AI / RAG 應用</p>
+        <p class="lede">致力於把複雜的系統需求，轉化為清晰、可被使用與信賴的數位產品。</p>
+      </div>
+      <aside class="hero-aside">
+        <img class="portrait" src="./cv/img/headshot.jpg" alt="周恩哲 Eric 個人照" />
+        <div>
+          <img class="qr" src="./cv/img/qrcode.jpeg" alt="QR Code" />
+          <p class="hero-meta">掃描・聯絡</p>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <hr class="rule" />
+
+  <!-- 關於我 -->
+  <section id="about">
+    <div class="shell">
+      <div class="sec-head reveal">
+        <span class="idx">i.</span>
+        <h2 class="display">關於我<span class="en">Profile &amp; Strengths</span></h2>
+      </div>
+      <div class="about-grid reveal">
+        <p class="about-lead">橫跨網路設備、自動化測試與 AI 應用的全端工程師，十年以上的系統維護與開發經驗。</p>
+        <div class="about-item"><span class="dot">◆</span><span><a href="https://tanshui.tjchurch.org.tw/" target="_blank" rel="noopener">2 年以上 WordPress 開發經驗</a>（作品連結）</span></div>
+        <div class="about-item"><span class="dot">◆</span><span><a href="https://ericchou42.github.io/pinnacle.github.io/" target="_blank" rel="noopener">3 年以上全端開發經驗</a>（作品連結）</span></div>
+        <div class="about-item"><span class="dot">◆</span><span><a href="https://github.com/ericchou42/cypress" target="_blank" rel="noopener">1 年以上 Cypress 自動化測試開發</a>（GitHub）</span></div>
+        <div class="about-item"><span class="dot">◆</span><span><a href="https://github.com/ericchou42/ai-chat" target="_blank" rel="noopener">LLM (ChatGPT) 與 PGVector / PostgreSQL 串接開發</a>（GitHub）</span></div>
+        <div class="about-item"><span class="dot">◆</span><span><a href="https://github.com/ericchou42/OptimizationFlow-Vue" target="_blank" rel="noopener">1 年以上 MES 生產管理系統開發</a>（GitHub）</span></div>
+        <div class="about-item"><span class="dot">◆</span><span>1 年以上 LangChain 框架與 RAG（Retrieval-Augmented Generation）開發</span></div>
+        <div class="about-item"><span class="dot">◆</span><span>5 年以上 Linux、OpenWrt 系統使用與維護</span></div>
+        <div class="about-item"><span class="dot">◆</span><span>5 年以上 60GHz 高頻網路技術（802.11ad / 802.11ay）維護</span></div>
+        <div class="about-item"><span class="dot">◆</span><span>4 年以上模擬客戶環境，操作大量網路設備（AP / 交換機 / 路由器）</span></div>
+        <div class="about-item"><span class="dot">◆</span><span>維護 20+ 款網路產品，多次至 WISP（中華電信、台灣大哥大）實地測試</span></div>
       </div>
     </div>
-  </body>
+  </section>
+
+  <!-- 工作經歷 -->
+  <section id="experience">
+    <div class="shell">
+      <div class="sec-head reveal">
+        <span class="idx">ii.</span>
+        <h2 class="display">工作經歷<span class="en">Professional Experience</span></h2>
+      </div>
+      <div class="timeline">
+        <article class="entry reveal">
+          <div class="when">2024 — 至今</div>
+          <div>
+            <div class="org"><h3>光紅建聖股份有限公司</h3><img src="./cv/img/ezconn.jpg" alt="EZconn" /></div>
+            <p class="post-role">軟體開發工程師 · 資訊部門</p>
+            <ul>
+              <li>數位轉型推動</li>
+              <li>生產管理系統（MES）開發</li>
+              <li>AI 內部管理文件問答系統開發</li>
+              <li>門禁管理系統開發</li>
+            </ul>
+          </div>
+        </article>
+        <article class="entry reveal">
+          <div class="when">2024.07 — 2024.11</div>
+          <div>
+            <div class="org"><h3>人易科技股份有限公司</h3><img src="./cv/img/nueip.jpeg" alt="NUEiP" /></div>
+            <p class="post-role">派遣軟體工程師 · 偉欣資訊</p>
+            <ul>
+              <li>前端 Cypress 自動化軟體開發</li>
+              <li>HR、CRM 系統</li>
+              <li>Monday 專案管理</li>
+            </ul>
+          </div>
+        </article>
+        <article class="entry reveal">
+          <div class="when">2019 — 2024.07</div>
+          <div>
+            <div class="org"><h3>智邦科技股份有限公司</h3><img src="./cv/img/accton.png" alt="Accton" /></div>
+            <p class="post-role">網路軟體工程師</p>
+            <ul>
+              <li>Linux 系統維護 · 網路管理 · OpenWRT · TCP/IP · IEEE 802.11ay</li>
+              <li>C 語言用於 60G 網路產品開發及測試</li>
+              <li>Docker · Shell Script · Python 開發維護自動測試</li>
+              <li>無線設備：熱點 · 防火牆 · VLAN 測試</li>
+              <li>VM · GitLab 用於雲服務器維護 · Jira 專案管理</li>
+            </ul>
+          </div>
+        </article>
+        <article class="entry reveal">
+          <div class="when">2017 — 2019</div>
+          <div>
+            <div class="org"><h3>智邦科技 · IgniteNet™</h3><img src="./cv/img/ignitenet.png" alt="IgniteNet" /></div>
+            <p class="post-role">軟體品質管理工程師 · 軟體研發部</p>
+            <ul>
+              <li>Linux 系統維護 · 網路管理 · OpenWRT · TCP/IP · IEEE 802.11ad</li>
+              <li>C 語言用於 60G 網路產品開發及測試</li>
+              <li>Docker · Shell Script · Python 開發維護自動測試</li>
+              <li>Redmine、Trello 專案管理</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 學習經歷 -->
+  <section id="education">
+    <div class="shell">
+      <div class="sec-head reveal">
+        <span class="idx">iii.</span>
+        <h2 class="display">學習經歷<span class="en">Education</span></h2>
+      </div>
+      <div class="timeline">
+        <article class="entry reveal">
+          <div class="when">2023 — 2025</div>
+          <div>
+            <div class="org"><h3>淡江大學</h3><img src="./cv/img/tku.png" alt="淡江大學" /></div>
+            <p class="post-role">資訊工程系</p>
+            <ul>
+              <li>進階計算機演算法 · Python 物聯網智慧 · AI 思維與服務</li>
+              <li>網路行銷行為 · 機器學習應用 · 資訊網路安全</li>
+              <li>論文：結合知識圖譜強化 RAG 技術之企業內部管理規章問答系統</li>
+            </ul>
+          </div>
+        </article>
+        <article class="entry reveal">
+          <div class="when">2012 — 2016</div>
+          <div>
+            <div class="org"><h3>明新科技大學</h3><img src="./cv/img/must.png" alt="明新科技大學" /></div>
+            <p class="post-role">電子工程系</p>
+            <ul>
+              <li>TCP/IP · C++</li>
+              <li>第三屆飛思卡爾杯自行車比賽 — 佳作</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- 作品集 -->
+  <section id="works">
+    <div class="shell">
+      <div class="sec-head reveal">
+        <span class="idx">iv.</span>
+        <h2 class="display">作品集<span class="en">Selected Works</span></h2>
+      </div>
+      <p class="works-intro reveal">由構想到上線——以下精選作品橫向陳列，點選任一相框即可進入瀏覽。</p>
+      <div class="works-flow">
+
+        <a class="work-card reveal" href="./MonthlyBudgeter/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">01</span><span class="glyph">₿</span></div>
+          <div class="work-body">
+            <span class="en">Vue · GAS · Cloud</span>
+            <h4>雲端理財</h4>
+            <p>雙人協作的記帳與預算系統，含信用卡帳單與雲端備份。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./card/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">02</span><span class="glyph">❦</span></div>
+          <div class="work-body">
+            <span class="en">Profile · Card</span>
+            <h4>互動名片</h4>
+            <p>個人數位名片的互動展示頁。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./budget-calculator/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">03</span><span class="glyph">∑</span></div>
+          <div class="work-body">
+            <span class="en">Finance · Tool</span>
+            <h4>預算計算機</h4>
+            <p>快速試算每月收支與預算分配。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./pdf-signature-editor/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">04</span><span class="glyph">✎</span></div>
+          <div class="work-body">
+            <span class="en">PDF · Editor</span>
+            <h4>PDF 簽章編輯器</h4>
+            <p>於瀏覽器中為 PDF 文件加上簽章。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./music/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">05</span><span class="glyph">♪</span></div>
+          <div class="work-body">
+            <span class="en">Audio · Web</span>
+            <h4>音樂播放</h4>
+            <p>網頁音樂播放介面練習。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./photo/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">06</span><span class="glyph">❖</span></div>
+          <div class="work-body">
+            <span class="en">Gallery · Layout</span>
+            <h4>攝影集</h4>
+            <p>影像作品的相簿陳列版面。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./Guitar/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">07</span><span class="glyph">𝄞</span></div>
+          <div class="work-body">
+            <span class="en">Chord · Tool</span>
+            <h4>吉他</h4>
+            <p>吉他和弦與練習輔助頁面。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./vue/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">08</span><span class="glyph">⌘</span></div>
+          <div class="work-body">
+            <span class="en">Vue · Practice</span>
+            <h4>Vue 練習</h4>
+            <p>Vue 元件與互動的實作練習。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+        <a class="work-card reveal" href="./goodnight/" target="_blank" rel="noopener">
+          <div class="work-frame"><span class="work-no">09</span><span class="glyph">☾</span></div>
+          <div class="work-body">
+            <span class="en">Landing · Service</span>
+            <h4>骨久 good night</h4>
+            <p>淡水整復推拿服務形象網頁。</p>
+            <span class="view">瀏覽作品 <span class="arrow">→</span></span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 擅長工具 -->
+  <section id="skills">
+    <div class="shell">
+      <div class="sec-head reveal">
+        <span class="idx">v.</span>
+        <h2 class="display">擅長工具<span class="en">Tools &amp; Stack</span></h2>
+      </div>
+
+      <div class="skill-block reveal">
+        <h3>AI 相關工具</h3>
+        <div class="chips">
+          <span class="chip"><img src="./cv/img/LangChain.jpeg" alt="" />LangChain</span>
+          <span class="chip"><img src="./cv/img/PostgreSQL.jpeg" alt="" />PostgreSQL / PGVector</span>
+          <span class="chip"><img src="./cv/img/FastAPI.jpeg" alt="" />FastAPI</span>
+          <span class="chip"><img src="./cv/img/Docker.png" alt="" />Docker</span>
+        </div>
+      </div>
+
+      <div class="skill-block reveal">
+        <h3>系統與框架</h3>
+        <div class="chips">
+          <span class="chip"><img src="./cv/img/ubuntu.png" alt="" />Ubuntu</span>
+          <span class="chip"><img src="./cv/img/macos.png" alt="" />macOS</span>
+          <span class="chip"><img src="./cv/img/vue.jpeg" alt="" />Vue</span>
+          <span class="chip"><img src="./cv/img/tcpip.png" alt="" />TCP/IP</span>
+          <span class="chip"><img src="./cv/img/openwrt.png" alt="" />OpenWrt</span>
+        </div>
+      </div>
+
+      <div class="skill-block reveal">
+        <h3>開發與測試工具</h3>
+        <div class="chips">
+          <span class="chip"><img src="./cv/img/cypress.png" alt="" />Cypress</span>
+          <span class="chip"><img src="./cv/img/wordpress.png" alt="" />WordPress</span>
+          <span class="chip"><img src="./cv/img/codepen.png" alt="" />CodePen</span>
+          <span class="chip"><img src="./cv/img/freescale.jpeg" alt="" />Freescale</span>
+        </div>
+      </div>
+
+      <div class="skill-block reveal">
+        <h3>程式語言</h3>
+        <div class="chips">
+          <span class="chip"><img src="./cv/img/python.png" alt="" />Python</span>
+          <span class="chip"><img src="./cv/img/java.png" alt="" />Java</span>
+          <span class="chip"><img src="./cv/img/htmljscss.png" alt="" />HTML · CSS · JS</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- 頁尾 / 聯絡 -->
+  <footer id="contact">
+    <div class="shell">
+      <div class="foot-grid">
+        <h2 class="display">讓我們<br /><em>一起共事。</em></h2>
+        <div class="foot-links">
+          <a href="./cv/RD_周恩哲.pdf" target="_blank" rel="noopener">English CV</a>
+          <a href="https://github.com/ericchou42" target="_blank" rel="noopener">GitHub</a>
+          <a href="#works">作品集</a>
+        </div>
+      </div>
+      <p class="copyright">© 2026 周恩哲 Eric · Curriculum Vitae &amp; Selected Works</p>
+    </div>
+  </footer>
+
+  <script>
+    // 進場淡入
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach((el, i) => {
+      el.style.transitionDelay = (Math.min(i % 6, 5) * 0.06) + 's';
+      io.observe(el);
+    });
+  </script>
+</body>
 </html>
