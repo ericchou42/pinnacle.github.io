@@ -173,58 +173,6 @@
 <body class="bg-slate-50 text-gray-800 antialiased">
 <div id="app" class="w-full min-h-screen pb-28" v-cloak>
 
-    <!-- 登入畫面 -->
-    <div v-if="!isLoggedIn" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center login-container p-8">
-        <div class="w-full space-y-6">
-            <div class="text-center text-white mb-10">
-                <div class="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/30">
-                    <span class="text-2xl">💰</span>
-                </div>
-                <h1 class="text-3xl font-black tracking-tighter">Eric & Livia</h1>
-                <p class="text-blue-400 text-xs tracking-[0.4em] uppercase mt-2">Finance Manager</p>
-                <p v-if="!isDataLoaded" class="text-slate-500 text-[10px] mt-4 animate-pulse">正在載入雲端配置...</p>
-                <p v-if="loginError" class="text-red-400 text-xs mt-4 animate-bounce">密碼錯誤，請重新輸入</p>
-            </div>
-            
-            <!-- 密碼顯示 -->
-            <div class="text-center">
-                <div class="inline-block bg-slate-800 border border-slate-700 rounded-2xl px-10 py-6">
-                    <div class="text-6xl font-black text-blue-400 tracking-[0.3em] min-h-[90px] flex items-center justify-center">
-                        {{ loginPwd.replace(/./g, '●') || '—' }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- 數字鍵盤 -->
-            <div class="bg-slate-800 rounded-2xl p-8 space-y-4">
-                <div class="grid grid-cols-3 gap-4">
-                    <button v-for="num in [1,2,3,4,5,6,7,8,9]" :key="num"
-                            @click="loginPwd += String(num)"
-                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-8 rounded-xl text-4xl active:scale-95 transition-all">
-                        {{ num }}
-                    </button>
-                </div>
-                <div class="grid grid-cols-3 gap-4">
-                    <button @click="loginPwd = loginPwd.slice(0, -1)"
-                            class="col-span-2 bg-red-600 hover:bg-red-500 text-white font-black py-8 rounded-xl text-2xl active:scale-95 transition-all">
-                        ← 刪除
-                    </button>
-                    <button @click="loginPwd += '0'"
-                            class="bg-slate-700 hover:bg-slate-600 text-white font-black py-8 rounded-xl text-4xl active:scale-95 transition-all">
-                        0
-                    </button>
-                </div>
-            </div>
-
-            <button @click="handleLogin"
-                    :disabled="!loginPwd || loginPwd.length === 0"
-                    class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-5 rounded-2xl shadow-2xl shadow-blue-500/30 active:scale-95 transition-all">
-                🔓 進入系統
-            </button>
-        </div>
-    </div>
-
-    <template v-else>
         <!-- 同步狀態 -->
         <transition name="fade">
             <div v-if="syncing" class="fixed top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-5 py-1.5 rounded-full shadow-lg text-[10px] font-bold z-50 flex items-center gap-2">
@@ -242,8 +190,12 @@
                     </div>
                     <span class="text-xs font-black text-slate-500 uppercase tracking-widest">{{ currentUser }}</span>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center justify-end gap-1.5 flex-wrap">
                     <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-3 py-1 rounded-lg uppercase">{{ currentTabName }}</span>
+                    <span v-for="status in loginStatusItems" :key="status.text"
+                          :class="['text-[10px] font-black px-3 py-1 rounded-lg', status.ok ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-500']">
+                        {{ status.text }}
+                    </span>
                 </div>
             </div>
             <!-- 月份切換 -->
@@ -1021,10 +973,6 @@
                     </button>
                 </div>
 
-                <button @click="isLoggedIn = false"
-                        class="w-full py-4 text-red-400 font-bold text-sm active:scale-95 transition-all">
-                    登出系統
-                </button>
             </div>
         </main>
 
@@ -1108,7 +1056,6 @@
             </div>
         </transition>
 
-    </template>
 </div>
 
 <script>
@@ -1121,17 +1068,20 @@ createApp({
         const isDataLoaded = ref(false);
         const syncing = ref(false);
         const isLoggedIn = ref(false);
-        const loginPwd = ref('');
-        const loginError = ref(false);
+        const loadError = ref('');
+        const apiKeyAuthorized = ref(null);
         const currentTab = ref('expense');
         const currentMonth = ref(new Date().toISOString().slice(0, 7));
 
         const urlParams = new URLSearchParams(window.location.search);
-        const currentUser = ref(urlParams.get('user') || 'Eric');
+        const urlUser = urlParams.get('user') || '';
+        const currentUser = ref(urlUser || 'Eric');
+        const validUsers = ['Eric', 'Livia'];
         // 存取密鑰：從網址參數讀取（例如 ?user=Eric&key=你的密鑰），
         // 不寫死在原始碼，因此公開的 GitHub repo 不會洩漏密鑰。
         // 後端會以此密鑰驗證請求，未帶正確密鑰者無法讀寫資料庫。
         const apiKey = urlParams.get('key') || '';
+        const urlPassword = urlParams.get('pwd') || urlParams.get('password') || '';
 
         const tabs = [
             { id: 'expense', name: '記帳', icon: '📝' },
@@ -1174,13 +1124,43 @@ createApp({
             // 这是通过计算属性 userCreditCards 实现的，此函数已弃用
         };
 
+        const clearFinanceData = () => {
+            budgets.value = [];
+            expenses.value = [];
+            categories.value = [];
+            paymentMethods.value = [];
+            savingsTargets.value = [];
+            creditCards.value = [];
+        };
+
         const loadData = async () => {
             isLoading = true;
+            loadError.value = '';
+            apiKeyAuthorized.value = null;
             try {
                 const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'load', userId: currentUser.value, key: apiKey }) });
                 const res = await response.json();
+                if (res.status === 'error') {
+                    if (res.message === 'unauthorized') {
+                        apiKeyAuthorized.value = false;
+                        loadError.value = '';
+                    } else {
+                        loadError.value = res.message || '雲端載入失敗';
+                    }
+                    handleLogin();
+                    clearFinanceData();
+                    return;
+                }
+                apiKeyAuthorized.value = true;
+                config.value = res.config || { password: '1234' };
+                handleLogin();
+                if (!isLoggedIn.value) {
+                    clearFinanceData();
+                    return;
+                }
+
                 const d = res.data || {};
-                // 純雲端模式：一律以雲端回傳為準（雲端是唯一真實來源）。
+                // 純雲端模式：通過使用者、API key、個人密碼驗證後才顯示雲端資料。
                 // 雲端沒有的欄位就維持空陣列，不再從 localStorage 還原，避免測試被本機舊資料干擾。
                 budgets.value = Array.isArray(d.budgets) ? d.budgets : [];
                 expenses.value = Array.isArray(d.expenses) ? d.expenses : [];
@@ -1188,10 +1168,9 @@ createApp({
                 paymentMethods.value = Array.isArray(d.paymentMethods) ? d.paymentMethods : [];
                 savingsTargets.value = Array.isArray(d.savingsTargets) ? d.savingsTargets : [];
                 creditCards.value = Array.isArray(d.creditCards) ? d.creditCards : [];
-                config.value = res.config || { password: '1234' };
             } catch (e) {
                 // 純雲端模式：連不上就維持空白並提示，不從本機還原。
-                alert('⚠️ 無法連線至雲端，請檢查網路或稍後再試（本次不會載入任何本機資料）。');
+                loadError.value = '雲端連線失敗';
             } finally {
                 isLoading = false;
                 isDataLoaded.value = true;
@@ -1271,10 +1250,11 @@ createApp({
 
         // ===== 登入 =====
         const handleLogin = () => {
-            if (loginPwd.value === String(config.value.password)) {
+            if (validUsers.includes(urlUser) && apiKeyAuthorized.value === true && urlPassword && urlPassword === String(config.value.password)) {
                 isLoggedIn.value = true;
-                loginError.value = false;
-            } else { loginError.value = true; loginPwd.value = ''; }
+            } else {
+                isLoggedIn.value = false;
+            }
         };
 
         const changePassword = () => {
@@ -1309,6 +1289,42 @@ createApp({
             return creditCards.value
                 .filter(c => c.user === currentUser.value)
                 .reduce((sum, card) => sum + calculateCreditCardBill(card, getReferenceDateForMonth()), 0);
+        });
+        const loginStatusItems = computed(() => {
+            const items = [];
+            if (!urlUser) {
+                items.push({ text: '缺使用者', ok: false });
+            } else if (validUsers.includes(urlUser)) {
+                items.push({ text: `使用者 ${currentUser.value}`, ok: true });
+            } else {
+                items.push({ text: '使用者錯誤', ok: false });
+            }
+
+            if (!apiKey) {
+                items.push({ text: '缺 API Key', ok: false });
+            } else if (apiKeyAuthorized.value === null && !isDataLoaded.value) {
+                items.push({ text: 'API Key 驗證中', ok: true });
+            } else if (apiKeyAuthorized.value === true) {
+                items.push({ text: 'API Key 正確', ok: true });
+            } else {
+                items.push({ text: 'API Key 錯誤', ok: false });
+            }
+
+            if (!urlPassword) {
+                items.push({ text: '缺個人密碼', ok: false });
+            } else if (!isDataLoaded.value) {
+                items.push({ text: '驗證中', ok: true });
+            } else if (isLoggedIn.value) {
+                items.push({ text: '已登入', ok: true });
+            } else if (apiKeyAuthorized.value !== true) {
+                items.push({ text: '密碼未驗證', ok: false });
+            } else if (urlPassword === String(config.value.password)) {
+                items.push({ text: '密碼正確', ok: true });
+            } else {
+                items.push({ text: '密碼錯誤', ok: false });
+            }
+            if (loadError.value) items.push({ text: loadError.value, ok: false });
+            return items;
         });
         const creditCardAvgUsage = computed(() => {
             const cards = creditCards.value.filter(c => c.user === currentUser.value && c.creditLimit);
@@ -1658,6 +1674,11 @@ createApp({
         };
 
         const importBackup = (event) => {
+            if (!isLoggedIn.value) {
+                alert('請先完成使用者、API Key、個人密碼驗證後再匯入資料');
+                event.target.value = '';
+                return;
+            }
             const file = event.target.files[0];
             if (!file) return;
             if (!confirm('⚠️ 匯入將覆蓋現有所有資料，確定繼續？')) { event.target.value = ''; return; }
@@ -1810,7 +1831,7 @@ createApp({
         };
 
         return {
-            currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
+            currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginStatusItems,
             expenseForm, budgetForm, creditCardForm, newItemName, editingExpense, editingCreditCard, expandedCategoryId, expandedPaymentMethodId, expandedCreditCardId,
             groupedExpenses, userCategories, userPaymentMethods, displayPaymentOptions, filteredBudgets, categories,
             currentSavingsTarget, scopedBudget, scopedExpense, scopedReport, paymentStats,
