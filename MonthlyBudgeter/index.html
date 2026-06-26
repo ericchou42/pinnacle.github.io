@@ -1441,6 +1441,17 @@ createApp({
             return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
         };
 
+        const parseLocalDate = (dateString) => {
+            const [year, month, day] = String(dateString).split('-').map(Number);
+            return new Date(year, month - 1, day);
+        };
+
+        const addDaysToDateString = (dateString, days) => {
+            const date = parseLocalDate(dateString);
+            date.setDate(date.getDate() + days);
+            return date;
+        };
+
         const getCreditCardBillingCycle = (card, referenceDate = null) => {
             if (!card || !card.statementDate) return { startDate: null, endDate: null };
 
@@ -1475,8 +1486,9 @@ createApp({
         };
 
         const getCreditCardAccountDate = (expense) => {
-            const expenseDate = new Date(expense.date);
-            return new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate() + 1);
+            if (expense.settlementDate) return parseLocalDate(expense.settlementDate);
+            const daysDifference = Number.isFinite(Number(expense.daysDifference)) ? Number(expense.daysDifference) : 2;
+            return addDaysToDateString(expense.date, daysDifference);
         };
 
         // 取得信用卡本期的消費明細（根據入帳日計算）
@@ -1494,7 +1506,7 @@ createApp({
         };
 
         // 計算信用卡本期的帳單金額（根據入帳日計算）
-        // 入帳日 = 消費日期 + 1天
+        // 入帳日 = 記帳時存下的 settlementDate，舊資料則用消費日期 + 到帳天數補算
         // 帳單周期：上月結帳日+1天 到 本月結帳日（含）
         // 支持指定參考日期（用於查看歷史月份）
         const calculateCreditCardBill = (card, referenceDate = null) => {
@@ -1643,10 +1655,8 @@ createApp({
             const idx = expenses.value.findIndex(e => e.id === editingExpense.value.id);
             if (idx !== -1) {
                 // 重新計算到帳日期
-                const expenseDate = new Date(editingExpense.value.date);
-                const settlementDate = new Date(expenseDate);
-                settlementDate.setDate(settlementDate.getDate() + (editingExpense.value.daysDifference || 2));
-                const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+                const daysDifference = Number.isFinite(Number(editingExpense.value.daysDifference)) ? Number(editingExpense.value.daysDifference) : 2;
+                const settlementDateStr = formatCycleDate(addDaysToDateString(editingExpense.value.date, daysDifference));
                 
                 // 更新到帳日期
                 editingExpense.value.settlementDate = settlementDateStr;
@@ -1734,14 +1744,13 @@ createApp({
             const records = [];
 
             for (let i = 1; i <= count; i++) {
-                const periodDate = new Date(expense.date);
+                const periodDate = parseLocalDate(expense.date);
                 periodDate.setMonth(periodDate.getMonth() + (i - 1));
-                const periodDateStr = periodDate.toISOString().slice(0, 10);
+                const periodDateStr = formatCycleDate(periodDate);
 
                 // 為每期重新計算到帳日期
-                const settlementDate = new Date(periodDateStr);
-                settlementDate.setDate(settlementDate.getDate() + (expense.daysDifference || 2));
-                const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+                const daysDifference = Number.isFinite(Number(expense.daysDifference)) ? Number(expense.daysDifference) : 2;
+                const settlementDateStr = formatCycleDate(addDaysToDateString(periodDateStr, daysDifference));
 
                 const recordAmount = i === 1 ? preview.first : preview.monthly;
                 records.push({
@@ -1790,14 +1799,13 @@ createApp({
                     if (existingPeriods.has(i)) continue; // 該期已存在，跳過
 
                     // 計算該期應建檔日期
-                    const nextDate = new Date(originalDate);
+                    const nextDate = parseLocalDate(originalDate);
                     nextDate.setMonth(nextDate.getMonth() + (i - 1));
-                    const nextDateStr = nextDate.toISOString().slice(0, 10);
+                    const nextDateStr = formatCycleDate(nextDate);
 
                     // 計算該期到帳日期
-                    const settlementDate = new Date(nextDateStr);
-                    settlementDate.setDate(settlementDate.getDate() + (daysDifference || 2));
-                    const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+                    const accountDays = Number.isFinite(Number(daysDifference)) ? Number(daysDifference) : 2;
+                    const settlementDateStr = formatCycleDate(addDaysToDateString(nextDateStr, accountDays));
 
                     // 直接建檔所有缺失的期次（聰明的設計：無需等待日期到達）
                     const preview = calculateInstallmentPreview(totalAmount, count, rate);
@@ -1813,7 +1821,7 @@ createApp({
                         amount,
                         scope: scope,
                         user: user,
-                        daysDifference: daysDifference || 2,
+                        daysDifference: accountDays,
                         installmentInfo: {
                             groupId,
                             totalAmount: totalAmount,
@@ -1847,15 +1855,14 @@ createApp({
                 if (!expenseForm.value.categoryId || !expenseForm.value.paymentMethodId || !expenseForm.value.amount) return;
                 
                 // 計算到帳日期
-                const expenseDate = new Date(expenseForm.value.date);
-                const settlementDate = new Date(expenseDate);
-                settlementDate.setDate(settlementDate.getDate() + (expenseForm.value.daysDifference || 2));
-                const settlementDateStr = settlementDate.toISOString().slice(0, 10);
+                const daysDifference = Number.isFinite(Number(expenseForm.value.daysDifference)) ? Number(expenseForm.value.daysDifference) : 2;
+                const settlementDateStr = formatCycleDate(addDaysToDateString(expenseForm.value.date, daysDifference));
                 
                 const baseExpense = {
                     ...expenseForm.value,
                     id: Date.now(),
                     user: currentUser.value,
+                    daysDifference,
                     settlementDate: settlementDateStr, // 添加到帳日期
                     installment: undefined // 移除表單的臨時分期字段
                 };
