@@ -812,35 +812,69 @@
                     <p class="text-sm font-bold">尚未新增信用卡</p>
                 </div>
                 <div v-else class="card divide-y divide-slate-50 overflow-hidden">
-                    <div v-for="card in userCreditCards" :key="card.id"
-                         class="p-5 flex justify-between items-start">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-3 h-3 rounded-full bg-blue-400 flex-shrink-0"></div>
-                                <p class="font-black text-slate-800">{{ card.cardName }}</p>
-                                <span class="text-[9px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded font-bold">{{ card.user }}</span>
-                            </div>
-                            <div class="flex items-center gap-3 text-[11px] text-slate-500 font-bold mt-1">
-                                <span>📅 結賬：{{ card.statementDate }}日</span>
-                                <span>📋 還款：{{ card.paymentDueDate }}日</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3 mt-3">
-                                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                    <p class="text-[11px] font-black text-blue-700">💰 本期帳單</p>
-                                    <p class="text-base font-black text-blue-600 mt-1 num-font">${{ calculateCreditCardBill(card, getReferenceDateForMonth()).toLocaleString() }}</p>
+                    <div v-for="card in userCreditCards" :key="card.id">
+                        <div @click="expandedCreditCardId = expandedCreditCardId === card.id ? null : card.id"
+                             class="p-5 flex justify-between items-start cursor-pointer hover:bg-blue-50 transition-all">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span :class="['text-sm transition-transform', expandedCreditCardId === card.id ? 'transform rotate-90' : '']">▶</span>
+                                    <div class="w-3 h-3 rounded-full bg-blue-400 flex-shrink-0"></div>
+                                    <p class="font-black text-slate-800">{{ card.cardName }}</p>
+                                    <span class="text-[9px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded font-bold">{{ card.user }}</span>
                                 </div>
-                                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                                    <p class="text-[11px] font-black text-amber-700">⏰ 繳款倒數</p>
-                                    <p class="text-base font-black text-amber-600 mt-1 num-font">還剩 {{ calculateDaysUntilDueDate(card) }} 天</p>
+                                <div class="flex items-center gap-3 text-[11px] text-slate-500 font-bold mt-1">
+                                    <span>📅 結賬：{{ card.statementDate }}日</span>
+                                    <span>📋 還款：{{ card.paymentDueDate }}日</span>
                                 </div>
+                                <div class="grid grid-cols-2 gap-3 mt-3">
+                                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                        <p class="text-[11px] font-black text-blue-700">💰 本期帳單</p>
+                                        <p class="text-base font-black text-blue-600 mt-1 num-font">${{ calculateCreditCardBill(card, getReferenceDateForMonth()).toLocaleString() }}</p>
+                                    </div>
+                                    <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                        <p class="text-[11px] font-black text-amber-700">⏰ 繳款倒數</p>
+                                        <p class="text-base font-black text-amber-600 mt-1 num-font">還剩 {{ calculateDaysUntilDueDate(card) }} 天</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 ml-3 flex gap-2">
+                                <button @click.stop="openEditCreditCard(card)"
+                                        class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-bold active:bg-blue-200 transition-all" title="編輯">✎</button>
+                                <button @click.stop="confirmDeleteCreditCard(card.id)"
+                                        class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 text-sm font-bold active:bg-red-100 active:text-red-400 transition-all" title="刪除">✕</button>
                             </div>
                         </div>
-                        <div class="flex-shrink-0 ml-3 flex gap-2">
-                            <button @click="openEditCreditCard(card)"
-                                    class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-bold active:bg-blue-200 transition-all" title="編輯">✎</button>
-                            <button @click="confirmDeleteCreditCard(card.id)"
-                                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 text-sm font-bold active:bg-red-100 active:text-red-400 transition-all" title="刪除">✕</button>
-                        </div>
+
+                        <transition name="slide">
+                            <div v-if="expandedCreditCardId === card.id" class="bg-blue-50 border-t border-slate-100 divide-y divide-slate-100">
+                                <div class="p-3 flex justify-between items-center gap-3 bg-white/60">
+                                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">本期消費明細</p>
+                                    <p class="text-[9px] font-bold text-slate-400">
+                                        {{ formatCycleDate(getCreditCardBillingCycle(card, getReferenceDateForMonth()).startDate) }}
+                                        -
+                                        {{ formatCycleDate(getCreditCardBillingCycle(card, getReferenceDateForMonth()).endDate) }}
+                                    </p>
+                                </div>
+                                <div v-for="expense in getCreditCardBillExpenses(card, getReferenceDateForMonth())" :key="expense.id"
+                                     class="p-3 flex justify-between items-start gap-3 hover:bg-blue-100 transition-all">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[11px] font-bold text-slate-700">{{ expense.title }}</p>
+                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                            <span class="text-[9px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold">消費 {{ expense.date }}</span>
+                                            <span class="text-[9px] bg-white text-slate-600 px-2 py-0.5 rounded font-bold">入帳 {{ formatCycleDate(getCreditCardAccountDate(expense)) }}</span>
+                                            <span :class="['text-[9px] font-bold px-2 py-0.5 rounded', expense.scope === 'personal' ? 'bg-purple-200 text-purple-700' : 'bg-blue-200 text-blue-700']">
+                                                {{ expense.scope === 'personal' ? '👤 個人' : '🏢 共同' }}
+                                            </span>
+                                            <span class="text-[9px] bg-white text-slate-500 px-2 py-0.5 rounded">{{ resolveCategoryName(expense.categoryId) }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] font-black text-slate-800 num-font flex-shrink-0">${{ expense.amount.toLocaleString() }}</span>
+                                </div>
+                                <div v-if="getCreditCardBillExpenses(card, getReferenceDateForMonth()).length === 0" class="p-4 text-center text-slate-400 text-[10px] font-bold">
+                                    本期尚無消費明細
+                                </div>
+                            </div>
+                        </transition>
                     </div>
                 </div>
             </div>
@@ -1125,6 +1159,7 @@ createApp({
         const expandedCategoryId = ref(null);
         const expandedPaymentMethodId = ref(null);
         const expandedCommonUserName = ref(null);
+        const expandedCreditCardId = ref(null);
 
         // ===== 資料載入 =====
         let isLoading = false;
@@ -1385,13 +1420,14 @@ createApp({
         };
 
         // ===== 信用卡帳單自動計算 =====
-        // 計算信用卡本期的帳單金額（根據入帳日計算）
-        // 入帳日 = 消費日期 + 2天
-        // 帳單周期：上月結帳日+2天 到 本月結帳日+2天（含）
-        // 支持指定參考日期（用於查看歷史月份）
-        const calculateCreditCardBill = (card, referenceDate = null) => {
-            if (!card || !card.statementDate) return 0;
-            
+        const formatCycleDate = (date) => {
+            if (!date) return '';
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        };
+
+        const getCreditCardBillingCycle = (card, referenceDate = null) => {
+            if (!card || !card.statementDate) return { startDate: null, endDate: null };
+
             // 使用傳入的參考日期或當前日期
             const dateToUse = referenceDate || new Date();
             const currentYear = dateToUse.getFullYear();
@@ -1418,18 +1454,35 @@ createApp({
                 const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
                 endDate = new Date(nextYear, nextMonth - 1, statementDay);
             }
-            
-            // 計算該周期內用該卡的所有支出（根據入帳日，即消費日期+1天）
+
+            return { startDate, endDate };
+        };
+
+        const getCreditCardAccountDate = (expense) => {
+            const expenseDate = new Date(expense.date);
+            return new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate() + 1);
+        };
+
+        // 取得信用卡本期的消費明細（根據入帳日計算）
+        const getCreditCardBillExpenses = (card, referenceDate = null) => {
+            const { startDate, endDate } = getCreditCardBillingCycle(card, referenceDate);
+            if (!card || !startDate || !endDate) return [];
+
             const cardId = card.id;
-            const billExpenses = expenses.value.filter(e => {
-                const expenseDate = new Date(e.date);
-                const statementDateInAccount = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate() + 1);
+            return expenses.value.filter(e => {
+                const statementDateInAccount = getCreditCardAccountDate(e);
                 return e.paymentMethodId === `card_${cardId}` &&
                        statementDateInAccount >= startDate &&
                        statementDateInAccount <= endDate;
-            });
-            
-            return billExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+            }).sort((a, b) => getCreditCardAccountDate(b) - getCreditCardAccountDate(a));
+        };
+
+        // 計算信用卡本期的帳單金額（根據入帳日計算）
+        // 入帳日 = 消費日期 + 1天
+        // 帳單周期：上月結帳日+1天 到 本月結帳日（含）
+        // 支持指定參考日期（用於查看歷史月份）
+        const calculateCreditCardBill = (card, referenceDate = null) => {
+            return getCreditCardBillExpenses(card, referenceDate).reduce((sum, e) => sum + (e.amount || 0), 0);
         };
 
         // 計算還剩幾天到繳款期限
@@ -1758,13 +1811,14 @@ createApp({
 
         return {
             currentUser, currentTab, currentMonth, tabs, isDataLoaded, syncing, isLoggedIn, loginPwd, loginError,
-            expenseForm, budgetForm, creditCardForm, newItemName, editingExpense, editingCreditCard, expandedCategoryId, expandedPaymentMethodId,
+            expenseForm, budgetForm, creditCardForm, newItemName, editingExpense, editingCreditCard, expandedCategoryId, expandedPaymentMethodId, expandedCreditCardId,
             groupedExpenses, userCategories, userPaymentMethods, displayPaymentOptions, filteredBudgets, categories,
             currentSavingsTarget, scopedBudget, scopedExpense, scopedReport, paymentStats,
             userCreditCards, totalCreditCardBills, creditCardAvgUsage,
             handleLogin, changePassword, changeMonth,
             openEditExpense, saveEditExpense,
             addCreditCard, openEditCreditCard, saveCreditCardEdit, confirmDeleteCreditCard, deleteCreditCard, calculateDaysUntilDueDate, calculateCreditCardBill, getReferenceDateForMonth,
+            getCreditCardBillingCycle, getCreditCardAccountDate, getCreditCardBillExpenses, formatCycleDate,
             snapshotKeys, downloadSnapshot,
             exportBackupManual, importBackup, getCategoryExpenses, getPaymentMethodExpenses, getCommonExpensesByUser, getCommonUserExpenses, expandedCommonUserName,
             isPaymentMethodCreditCard, calculateInstallmentPreview, checkAndCreateInstallmentDueExpenses,
